@@ -1,0 +1,105 @@
+experiment:
+  # Basic info suitable for inclusion in an NWB file.
+  # Created 3/6/24 by LWT based on an initial version by JIG and BH
+  experimenter:
+    - Zweigle, Jean
+    - Thompson, Lowell
+    - Subritzky-Katz, Victoria
+  experiment_description: Adaptive ODR ("ADODR")
+  institution: University of Pennsylvania
+  lab: The Gold Lab
+  monkey: 'Anubis'
+  keywords:
+    - dlPFC
+readers:
+    # Where to read data from, and how to map/transform it into buffers that trials can pick from.
+  event_reader:
+    class: pyramid.neutral_zone.readers.nwb.NwbNumericEventReader
+    args:
+      nwb_file: "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Recordings/Testing/FakeNeuronAODR_2024-03-05_11-29-12"
+      result_name: delimiter
+      sample_frequency: 30000
+      stream_name: 'Rhythm Data'
+    # Use ecodes as the delimiter for trials in time. If this extra buffer isn't here, apparently enhancers can't be completed.
+    extra_buffers:
+      ecodes:
+        reader_result_name: delimiter
+  gaze_x_reader:
+    class: pyramid.neutral_zone.readers.nwb.NwbContinuousReader
+    args:
+      nwb_file: "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Recordings/Testing/FakeNeuronAODR_2024-03-05_11-29-12"
+      stream_name: 'PXIe-6363'
+      result_name: raw_x_gaze
+      sample_frequency: 1000
+      channel_ids: [0]
+    extra_buffers:
+          # Scale up the gaze signals by a known gain.
+          gaze_x:
+            reader_result_name: raw_x_gaze
+            transformers:
+              - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
+                args:
+                  gain: 10.2
+  gaze_y_reader:
+    class: pyramid.neutral_zone.readers.nwb.NwbContinuousReader
+    args:
+      nwb_file: "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Recordings/Testing/FakeNeuronAODR_2024-03-05_11-29-12"
+      stream_name: 'PXIe-6363'
+      result_name: raw_y_gaze
+      sample_frequency: 1000
+      channel_ids: [1]
+    extra_buffers:
+          # Scale up the gaze signals by a known gain.
+          gaze_y:
+            reader_result_name: raw_y_gaze
+            transformers:
+              - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
+                args:
+                  gain: 10.2
+trials:
+  start_buffer: delimiter # delimiter?
+  start_value: 1005
+  wrt_buffer: delimiter # delimiter?
+  wrt_value: 1010
+
+  adjusters:
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_x
+        type: Gaussian
+        args: 5
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_y
+        type: Gaussian
+        args: 5
+  enhancers:
+      # Standard enchancers come along with the Pyramid code.
+    - class: pyramid.trials.standard_enhancers.PairedCodesEnhancer
+      args:
+        buffer_name: ecodes
+        rules_csv: [default_ecode_rules.csv, AODR_ecode_rules.csv]
+      # Standard enchancers come along with the Pyramid code.
+    - class: pyramid.trials.standard_enhancers.EventTimesEnhancer
+      args:
+        buffer_name: ecodes
+        rules_csv: [default_ecode_rules.csv, AODR_ecode_rules.csv]
+      # Standard enchancers come along with the Pyramid code.
+    - class: pyramid.trials.standard_enhancers.ExpressionEnhancer
+      args:
+        expression: task_id > 0
+        value_name: actual_task
+      # Saccades enhancer is a standard enhancer on the jig_develop branch of pyramid
+    - class: pyramid.trials.standard_enhancers.SaccadesEnhancer
+      when: actual_task and len(fp_off) > 0
+      args:
+        min_length_deg: 3
+        velocity_threshold_deg_per_s: 250 #300
+        acceleration_threshold_deg_per_s2: 6
+        debug_plot: True
+        debug_plot_pause_s: 1.0
+    - class: AODR_custom_enhancers.CustomEnhancer
+      package_path: .
+      when: actual_task
+      args:
+        min_angular_distance_to_target_deg: 30
