@@ -14,5 +14,5 @@ dependencies:
     - docker==6.1.3
     - pandas==2.1.1
     - scipy==1.11.4
-    - open-ephys-python-tools==0.1.7
+    - open-ephys-python-tools==0.1.8
     - git+https://github.com/benjamin-heasly/pyramid

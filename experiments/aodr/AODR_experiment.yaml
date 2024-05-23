@@ -1,0 +1,69 @@
+experiment:
+  # Basic info suitable for inclusion in an NWB file.
+  # Created 3/6/24 by LWT based on an initial version by JIG and BH
+  experimenter:
+    - Zweigle, Jean
+    - Thompson, Lowell
+    - Subritzky-Katz, Victoria
+  experiment_description: Adaptive ODR ("ADODR")
+  institution: University of Pennsylvania
+  lab: The Gold Lab
+  monkey: 'Anubis'
+  keywords:
+    - dlPFC
+readers:
+  # Read Open Ephys TTL events as Pyramid numeric events like: [timestamp, line_number, line_state, processor_id]
+  ttl_reader:
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionNumericEventReader
+    args:
+      session_dir: "2024-05-14"
+      stream_name: Rhythm Data
+      result_name: ttl
+    extra_buffers:
+      # A buffer that filters TTL events to just line number 1.
+      ttl_1:
+        reader_result_name: ttl
+        transformers:
+          - class: pyramid.neutral_zone.transformers.standard_transformers.FilterRange
+            args:
+              value_index: 0
+              min: 1
+              max: 2
+      # A buffer that filters TTL events to just line number 3.
+      ttl_3:
+        reader_result_name: ttl
+        transformers:
+          - class: pyramid.neutral_zone.transformers.standard_transformers.FilterRange
+            args:
+              value_index: 0
+              min: 3
+              max: 4
+  message_reader:
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
+    args:
+      session_dir: "2024-05-14"
+      result_name: raw_messages
+    extra_buffers:
+      # Parse out message timestamps that were appended to message text.
+      messages:
+          reader_result_name: raw_messages
+          transformers:
+          - class: udp_events.MessageTimesstamps
+            package_path: python
+            args:
+              timestamp_delimiter: "@"
+              sample_number_delimiter: "="
+trials:
+  # Start trials when TTL line 1 goes high.
+  start_buffer: ttl_1
+  start_value: 1
+  start_value_index: 1
+  # Align trials when TTL line 3 goes high.
+  wrt_buffer: ttl_3
+  wrt_value: 1
+  wrt_value_index: 1
+  enhancers:
+    - class: pyramid.trials.standard_enhancers.TextKeyValueEnhancer
+      args:
+        buffer_name: messages
+        int_types: ["int", "long", "unsigned long"]
