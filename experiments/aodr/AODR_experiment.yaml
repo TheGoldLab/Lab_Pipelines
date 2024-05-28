@@ -16,7 +16,7 @@ readers:
   ttl_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionNumericEventReader
     args:
-      session_dir: "2024-05-14"
+      session_dir: "Test_2024-05-24_12-37-30"
       stream_name: Rhythm Data
       result_name: ttl
     extra_buffers:
@@ -41,7 +41,7 @@ readers:
   message_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
     args:
-      session_dir: "2024-05-14"
+      session_dir: "Test_2024-05-24_12-37-30"
       result_name: raw_messages
     extra_buffers:
       # Parse out message timestamps that were appended to message text.
@@ -66,4 +66,5 @@ trials:
     - class: pyramid.trials.standard_enhancers.TextKeyValueEnhancer
       args:
         buffer_name: messages
+        entry_delimiter: "|"
         int_types: ["int", "long", "unsigned long"]
