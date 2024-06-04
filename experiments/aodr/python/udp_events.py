@@ -14,11 +14,10 @@ class MessageTimesstamps(Transformer):
 
     https://github.com/benjamin-heasly/UDPEvents
 
-    UDPEvents receives sync and text messages via UDP and writes text messages like these,
-    with a @timestamp and a =sample_number appended to the text message bodies:
+    UDPEvents receives sync and text messages via UDP, then writes text messages like these
+    with @timestamp and =sample_number appended to the text message bodies:
 
         - UDP Events sync on line 4@0.251607=79808
-        - He who laughs last laughs ... you can't laugh again.@5.05543=271714
         - name=matlab,value=rSet('dXtarget',[4],'visible',1.00);draw_flag=1;,type=string@842.356=4212348
         - name=4930,type=unsigned long@842.369=4212738
 
@@ -47,16 +46,20 @@ class MessageTimesstamps(Transformer):
 
     def update_events(self, events: TextEventList):
         for index in range(events.event_count()):
-            raw_timestamp = events.timestamp_data[index]
             raw_text = events.text_data[index]
             try:
                 # Split out message text along delimiters.
                 (new_text, timing_info) = raw_text.split(self.timestamp_delimiter, maxsplit=1)
                 (new_timestamp, sample_number) = timing_info.split(self.sample_number_delimiter, maxsplit=1)
-                #print(f"{raw_timestamp}: {float(new_timestamp)} {sample_number} {new_text}")
 
-                # Update the text event with parsed timestamp and text value, in place.
-                #events.timestamp_data[index] = float(new_timestamp)
+                # Update the text event in place, to use the parsed timestamp.
+                events.timestamp_data[index] = float(new_timestamp)
+
+                # Update the text event in place to use the original message without the timestamp suffix.
+                if new_text.startswith("UDP Events sync"):
+                    # Also format sync messages with key-value-pairs for "name" and "value".
+                    # This makes it handier to parse various key-value-pair messages downstream.
+                    new_text = f"name=sync|value={new_text}"
                 events.text_data[index] = new_text
             except:
                 logging.warning("Unable to parse timestamp from message: {raw_text}", exc_info=True)

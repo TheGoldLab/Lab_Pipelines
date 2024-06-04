@@ -38,6 +38,12 @@ readers:
               value_index: 0
               min: 3
               max: 4
+    sync:
+      is_reference: True
+      buffer_name: ttl_1
+      filter: value[1] == 1
+      timestamps: timestamp
+      keys: timestamp
   message_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
     args:
@@ -53,6 +59,27 @@ readers:
             args:
               timestamp_delimiter: "@"
               sample_number_delimiter: "="
+    sync:
+      buffer_name: raw_messages
+      filter: value.startswith("UDP Events sync")
+      timestamps: float(value.split('@')[1].split('=')[0])
+      keys: timestamp
+      pairing_strategy: closest
+  gaze_reader:
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
+    args:
+      session_dir: "Test_2024-05-24_12-37-30"
+      result_name: raw_gaze
+      stream_name: PXIe-6363
+      channel_names: ["CH1", "CH2"]
+    extra_buffers:
+      # Scale up the gaze signals by a known gain.
+      gaze:
+        reader_result_name: raw_gaze
+        transformers:
+          - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
+            args:
+              gain: 10.2
 trials:
   # Start trials when TTL line 1 goes high.
   start_buffer: ttl_1
@@ -68,3 +95,18 @@ trials:
         buffer_name: messages
         entry_delimiter: "|"
         int_types: ["int", "long", "unsigned long"]
+plotters:
+    # Plot basic info about conversion process, plus a "Quit" button.
+  - class: pyramid.plotters.standard_plotters.BasicInfoPlotter
+    # Plot raw numeric event data.
+  - class: pyramid.plotters.standard_plotters.NumericEventsPlotter
+    args:
+      xmin: -3.0
+      xmax: 3.0
+    # List raw text event data.
+  - class: pyramid.plotters.standard_plotters.TextEventsPlotter
+  - class: pyramid.plotters.standard_plotters.SignalChunksPlotter
+    args:
+      xmin: -3.0
+      xmax: 3.0
+      match_pattern: gaze

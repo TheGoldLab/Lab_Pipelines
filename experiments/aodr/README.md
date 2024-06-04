@@ -5,7 +5,7 @@ pyramid graph \
 --experiment AODR_experiment.yaml \
 --graph-file aodr-test.png
 
-pyramid convert \
+pyramid gui \
 --search-path /home/ninjaben/open-ephys/from_lowell \
 --experiment AODR_experiment.yaml \
 --subject AODR_subject.yaml \

@@ -1,2 +1,6 @@
+# data files from testing, debugging
 aodr-test.json
 scratch.json
+
+# Python cache
+*.pyc
