@@ -16,7 +16,7 @@ readers:
   ttl_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionNumericEventReader
     args:
-      session_dir: "Test_2024-05-24_12-37-30"
+      session_dir: "Anubis_2024-05-29_12-38-06"
       stream_name: Rhythm Data
       result_name: ttl
     extra_buffers:
@@ -41,13 +41,14 @@ readers:
     sync:
       is_reference: True
       buffer_name: ttl_1
+      # filter, timesamps, and keys are Python expressions evaluated once per event with vars "value", "timestamp", and "count".
       filter: value[1] == 1
       timestamps: timestamp
       keys: timestamp
   message_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
     args:
-      session_dir: "Test_2024-05-24_12-37-30"
+      session_dir: "Anubis_2024-05-29_12-38-06"
       result_name: raw_messages
     extra_buffers:
       # Parse out message timestamps that were appended to message text.
@@ -61,6 +62,7 @@ readers:
               sample_number_delimiter: "="
     sync:
       buffer_name: raw_messages
+      # filter, timesamps, and keys are Python expressions evaluated once per event with vars "value", "timestamp", and "count".
       filter: value.startswith("UDP Events sync")
       timestamps: float(value.split('@')[1].split('=')[0])
       keys: timestamp
@@ -68,7 +70,7 @@ readers:
   gaze_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
     args:
-      session_dir: "Test_2024-05-24_12-37-30"
+      session_dir: "Anubis_2024-05-29_12-38-06"
       result_name: raw_gaze
       stream_name: PXIe-6363
       channel_names: ["CH1", "CH2"]
@@ -95,6 +97,29 @@ trials:
         buffer_name: messages
         entry_delimiter: "|"
         int_types: ["int", "long", "unsigned long"]
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze
+        channel_id: CH1
+        filter_type: gaussian
+        gaussian_std: 5
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze
+        channel_id: CH2
+        filter_type: gaussian
+        gaussian_std: 5
+    - class: pyramid.trials.standard_enhancers.SaccadesEnhancer
+      args:
+        x_buffer_name: gaze
+        x_channel_id: CH1
+        y_buffer_name: gaze
+        y_channel_id: CH2
+        fp_off_name: "1025"
+        all_off_name: "4904"
+        min_length_deg: 3
+        velocity_threshold_deg_per_s: 250 #300
+        acceleration_threshold_deg_per_s2: 6
 plotters:
     # Plot basic info about conversion process, plus a "Quit" button.
   - class: pyramid.plotters.standard_plotters.BasicInfoPlotter
