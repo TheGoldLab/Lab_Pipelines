@@ -135,3 +135,21 @@ plotters:
       xmin: -3.0
       xmax: 3.0
       match_pattern: gaze
+    # Plot saccades.
+  - class: pyramid.plotters.standard_plotters.EnhancementXYPlotter
+    args:
+      xmin: -20
+      xmax: 20
+      ymin: -15
+      ymax: 15
+      # These XY pairs are plotted as separate points.
+      xy_points:
+        fp_x: fp_y
+        t1_x: t1_y
+        t2_x: t2_y
+        sample_x: sample_y
+      # These XY pairs are grouped together and plotted as lines.
+      xy_groups:
+        scored_saccade:
+          x_start: y_start
+          x_end: y_end

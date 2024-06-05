@@ -44,29 +44,30 @@ class MessageTimesstamps(Transformer):
                 return (float(timestamp), message_prefix)
         return (None, None)
 
-    def update_events(self, events: TextEventList):
-        for index in range(events.event_count()):
-            raw_text = events.text_data[index]
-            try:
-                # Split out message text along delimiters.
-                (new_text, timing_info) = raw_text.split(self.timestamp_delimiter, maxsplit=1)
-                (new_timestamp, sample_number) = timing_info.split(self.sample_number_delimiter, maxsplit=1)
+    def parse_events(self, events: TextEventList) -> TextEventList:
+        # Parse events into a new event list.
+        # This allows text data to change length.
+        timestamp_data = []
+        text_data = []
+        for raw_timestamp, raw_text in events.each():
+            (message_text, timing_info) = raw_text.split(self.timestamp_delimiter, maxsplit=1)
 
-                # Update the text event in place, to use the parsed timestamp.
-                events.timestamp_data[index] = float(new_timestamp)
+            # Use the beginning of the message text, before the timing info.
+            if message_text.startswith("UDP Events sync"):
+                # Make sync messages a little easier to parse, downstream.
+                text_data.append(f"name=sync|value={raw_text}")
+            else:
+                text_data.append(message_text)
 
-                # Update the text event in place to use the original message without the timestamp suffix.
-                if new_text.startswith("UDP Events sync"):
-                    # Also format sync messages with key-value-pairs for "name" and "value".
-                    # This makes it handier to parse various key-value-pair messages downstream.
-                    new_text = f"name=sync|value={new_text}"
-                events.text_data[index] = new_text
-            except:
-                logging.warning("Unable to parse timestamp from message: {raw_text}", exc_info=True)
+            # Parse a new timestamp from near the end of the message text.
+            (messge_timestamp, sample_number) = timing_info.split(self.sample_number_delimiter, maxsplit=1)
+            timestamp_data.append(float(messge_timestamp))
+
+        return TextEventList(np.array(timestamp_data), np.array(text_data, dtype=np.str_))
 
     def transform(self, data: BufferData):
         if isinstance(data, TextEventList):
-            self.update_events(data)
+            return self.parse_events(data)
         else:
             logging.warning(f"UDPEventsMessageTimes doesn't know how to apply to {data.__class__.__name__}")
         return data

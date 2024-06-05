@@ -10,3 +10,13 @@ pyramid gui \
 --experiment AODR_experiment.yaml \
 --subject AODR_subject.yaml \
 --trial-file aodr-test.json
+
+# Trial util to get one time from a named enhancement or event list
+# Trial util to get one value from a named enhancement or event list
+# Saccades parser code use the time util
+
+# Plot saccade XY pairs from list of saccades, not just single dict?
+
+# Want the ecodes event lists to end up as named enhancements, not obscure event lists.
+# Or named events lists is fine?
+# An alias enhancer?
