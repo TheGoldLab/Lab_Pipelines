@@ -42,18 +42,15 @@ class CustomEnhancer(TrialEnhancer):
         subject_info: dict[str: Any]
     ) -> None:
 
-        # Use trial.get_enhancement() to get values already set from ecode-rules.csv
-        # via PairedCodesEnhancer and EventTimesEnhancer.
-
-        task_id = trial.get_enhancement("task_id")
+        task_id = trial.get_one("task_id")
 
         # Use trial.add_enhancement() to set new values from custom computations.
         # You can set a category like "time", "id", or "value" (the default).
 
         # Save target angles
-        t1_angle = ang_deg(trial.get_enhancement('t1_x'), trial.get_enhancement('t1_y'))
+        t1_angle = ang_deg(trial.get_one('t1_x'), trial.get_one('t1_y'))
         trial.add_enhancement('t1_angle', t1_angle, "id")
-        t2_angle = ang_deg(trial.get_enhancement('t2_x', 0), trial.get_enhancement('t2_y', 0))
+        t2_angle = ang_deg(trial.get_one('t2_x', 0), trial.get_one('t2_y', 0))
         trial.add_enhancement('t2_angle', t2_angle, "id")
 
         if task_id == 1:
@@ -66,11 +63,11 @@ class CustomEnhancer(TrialEnhancer):
         elif task_id in (2, 3, 4, 5):
 
             # For AODR, figure out sample angle, correct/error target, LLR
-            sample_angle = ang_deg(trial.get_enhancement("sample_x"), trial.get_enhancement("sample_y"))
+            sample_angle = ang_deg(trial.get_one("sample_x"), trial.get_one("sample_y"))
             trial.add_enhancement("sample_angle", sample_angle)
 
             # parse trial id
-            trial_id = trial.get_enhancement("trial_id") - 100 * task_id
+            trial_id = trial.get_one("trial_id") - 100 * task_id
 
             # Parse LLR
             # task_adaptiveODR3.c "Task Info" menu has P1-P9, which
@@ -137,7 +134,7 @@ class CustomEnhancer(TrialEnhancer):
             trial.add_enhancement("llr_for_switch", llr_for_switch)
 
         # Use trial.get_enhancement() to get saccade info already parsed by SaccadesEnhancer.
-        broken_fixation = trial.get_enhancement("fp_off") is None
+        broken_fixation = trial.get_time("fp_off") is None
         saccades = trial.get_enhancement("saccades")
         score = -1
         if broken_fixation:
@@ -173,20 +170,20 @@ class CustomEnhancer(TrialEnhancer):
                     trial.add_enhancement("choice", 3-correct_target, "id")
                 trial.add_enhancement("RT", saccades[saccade_index]["t_start"])
                 trial.add_enhancement("scored_saccade_index", saccade_index, "id")
-                trial.add_enhancement("sac_on", trial.get_one("RT")+trial.get_one("fp_off"), "time")
+                trial.add_enhancement("sac_on", trial.get_one("RT")+trial.get_time("fp_off"), "time")
                 #print(target_angles)
                 #print(target_index)
-                #print(f'Choice={trial.get_enhancement("choice")}, score={score}, RT={trial.get_one("RT"):.4f}')
+                #print(f'Choice={trial.get_one("choice")}, score={score}, RT={trial.get_one("RT"):.4f}')
 
         # 1=correct, 0=error, -1=nc, -2=brfix,-3=sample
         trial.add_enhancement("score", score, "id")
 
         # Use trial.get_one() to grab the first timestamp from each "time" enhancement.
         score_times = [
-            trial.get_one("online_brfix", default=None),
-            trial.get_one("online_ncerr", default=None),
-            trial.get_one("online_error", default=None),
-            trial.get_one("online_correct", default=None),
+            trial.get_time("online_brfix", default=None),
+            trial.get_time("online_ncerr", default=None),
+            trial.get_time("online_error", default=None),
+            trial.get_time("online_correct", default=None),
         ]
 
         # We can use Python list comprehension to search for the non-None times.
