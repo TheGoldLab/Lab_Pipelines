@@ -97,6 +97,9 @@ trials:
         buffer_name: messages
         entry_delimiter: "|"
         int_types: ["int", "long", "unsigned long"]
+    - class: pyramid.trials.standard_enhancers.RenameEnhancer
+      args:
+        rules_csv: [ecodes/default_ecode_rules.csv, ecodes/AODR_ecode_rules.csv]
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze
@@ -115,8 +118,8 @@ trials:
         x_channel_id: CH1
         y_buffer_name: gaze
         y_channel_id: CH2
-        fp_off_name: "1025"
-        all_off_name: "4904"
+        fp_off_name: "fp_off"
+        all_off_name: "all_off"
         min_length_deg: 3
         velocity_threshold_deg_per_s: 250 #300
         acceleration_threshold_deg_per_s2: 6
