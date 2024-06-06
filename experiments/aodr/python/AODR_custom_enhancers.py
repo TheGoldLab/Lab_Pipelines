@@ -43,6 +43,8 @@ class CustomEnhancer(TrialEnhancer):
     ) -> None:
 
         task_id = trial.get_one("task_id")
+        if task_id is None:
+            return
 
         # Use trial.add_enhancement() to set new values from custom computations.
         # You can set a category like "time", "id", or "value" (the default).
@@ -170,6 +172,7 @@ class CustomEnhancer(TrialEnhancer):
                     trial.add_enhancement("choice", 3-correct_target, "id")
                 trial.add_enhancement("RT", saccades[saccade_index]["t_start"])
                 trial.add_enhancement("scored_saccade_index", saccade_index, "id")
+                trial.add_enhancement("scored_saccade", saccades[saccade_index], "value")
                 trial.add_enhancement("sac_on", trial.get_one("RT")+trial.get_time("fp_off"), "time")
                 #print(target_angles)
                 #print(target_index)

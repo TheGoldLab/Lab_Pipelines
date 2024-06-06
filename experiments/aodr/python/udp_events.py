@@ -7,7 +7,7 @@ from pyramid.model.events import TextEventList
 from pyramid.neutral_zone.transformers.transformers import Transformer
 
 
-class MessageTimesstamps(Transformer):
+class UDPEventParser(Transformer):
     """Parse timestamp info that our Open Ephys UDPEvents plugin appended to text messsages.
 
     The UDPEvents plugin is how we're enriching a small number of physical TTL lines with extra TTL and text events:
@@ -34,35 +34,31 @@ class MessageTimesstamps(Transformer):
         self.sample_number_delimiter = sample_number_delimiter
         return None
 
-    def parse_message(self, message: str) -> tuple[float, str]:
-        parts = message.split(self.timestamp_delimiter, maxsplit=1)
-        if len(parts) == 2:
-            (message_prefix, timing_info) = parts
-            timing_parts = timing_info.split(self.sample_number_delimiter, maxsplit=1)
-            if len(timing_parts) == 2:
-                (timestamp, _) = timing_parts
-                return (float(timestamp), message_prefix)
-        return (None, None)
-
     def parse_events(self, events: TextEventList) -> TextEventList:
-        # Parse events into a new event list.
-        # This allows text data to change length.
+        # Parse incoming events to choose a new timestamp and text messages for each.
         timestamp_data = []
         text_data = []
         for raw_timestamp, raw_text in events.each():
-            (message_text, timing_info) = raw_text.split(self.timestamp_delimiter, maxsplit=1)
-
-            # Use the beginning of the message text, before the timing info.
-            if message_text.startswith("UDP Events sync"):
-                # Make sync messages a little easier to parse, downstream.
-                text_data.append(f"name=sync|value={raw_text}")
-            else:
-                text_data.append(message_text)
-
-            # Parse a new timestamp from near the end of the message text.
+            # Split up raw text around delimiters, like this:
+            # <raw_message>@<messge_timestamp>=<sample_number>
+            (message, timing_info) = raw_text.split(self.timestamp_delimiter, maxsplit=1)
             (messge_timestamp, sample_number) = timing_info.split(self.sample_number_delimiter, maxsplit=1)
+
+            # New events will take their timestamps from parsed input text.
             timestamp_data.append(float(messge_timestamp))
 
+            if message.startswith("UDP Events sync"):
+                # Sync events are a special case.
+                # Write the original message timetamp into the new message text
+                # to make it easier to pair up sync events from different readers.
+                # Choose a format with key=value pairs separated by pipes |
+                # This just makes it easier for downstram code to read sync events along with other events from Rex.
+                text_data.append(f"name=sync|value={raw_text}|key={raw_timestamp}")
+            else:
+                text_data.append(message)
+
+        # Return a new event list with the parsed timestamps and messages.
+        # Using a new list lets us change the text string sizes.
         return TextEventList(np.array(timestamp_data), np.array(text_data, dtype=np.str_))
 
     def transform(self, data: BufferData):

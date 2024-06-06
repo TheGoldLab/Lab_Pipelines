@@ -16,7 +16,7 @@ readers:
   ttl_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionNumericEventReader
     args:
-      session_dir: "Anubis_2024-05-29_12-38-06"
+      session_dir: "Anubis_2024-06-05_12-38-25"
       stream_name: Rhythm Data
       result_name: ttl
     extra_buffers:
@@ -41,6 +41,7 @@ readers:
     sync:
       is_reference: True
       buffer_name: ttl_1
+      init_event_count: 10
       # filter, timesamps, and keys are Python expressions evaluated once per event with vars "value", "timestamp", and "count".
       filter: value[1] == 1
       timestamps: timestamp
@@ -48,29 +49,30 @@ readers:
   message_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
     args:
-      session_dir: "Anubis_2024-05-29_12-38-06"
-      result_name: raw_messages
+      session_dir: "Anubis_2024-06-05_12-38-25"
+      result_name: messages
     extra_buffers:
-      # Parse out message timestamps that were appended to message text.
+      # Replace read messages with alternate versions that we parse in ./python/udp_events.py
       messages:
-          reader_result_name: raw_messages
+          reader_result_name: messages
           transformers:
-          - class: udp_events.MessageTimesstamps
+          - class: udp_events.UDPEventParser
             package_path: python
             args:
               timestamp_delimiter: "@"
               sample_number_delimiter: "="
     sync:
-      buffer_name: raw_messages
+      buffer_name: messages
+      init_event_count: 10
       # filter, timesamps, and keys are Python expressions evaluated once per event with vars "value", "timestamp", and "count".
-      filter: value.startswith("UDP Events sync")
-      timestamps: float(value.split('@')[1].split('=')[0])
-      keys: timestamp
+      filter: value.startswith("name=sync")
+      timestamps: timestamp
+      keys: float(value.split("key=")[-1])
       pairing_strategy: closest
   gaze_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
     args:
-      session_dir: "Anubis_2024-05-29_12-38-06"
+      session_dir: "Anubis_2024-06-05_12-38-25"
       result_name: raw_gaze
       stream_name: PXIe-6363
       channel_names: ["CH1", "CH2"]
@@ -123,6 +125,10 @@ trials:
         min_length_deg: 3
         velocity_threshold_deg_per_s: 250 #300
         acceleration_threshold_deg_per_s2: 6
+    - class: AODR_custom_enhancers.CustomEnhancer
+      package_path: python
+      args:
+        min_angular_distance_to_target_deg: 30
 plotters:
     # Plot basic info about conversion process, plus a "Quit" button.
   - class: pyramid.plotters.standard_plotters.BasicInfoPlotter
