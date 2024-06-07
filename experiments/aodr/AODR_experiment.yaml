@@ -73,13 +73,13 @@ readers:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
     args:
       session_dir: "Anubis_2024-06-05_12-38-25"
-      result_name: raw_gaze
+      result_name: gaze
       stream_name: PXIe-6363
       channel_names: ["CH1", "CH2"]
     extra_buffers:
       # Scale up the gaze signals by a known gain.
       gaze:
-        reader_result_name: raw_gaze
+        reader_result_name: gaze
         transformers:
           - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
             args:
@@ -99,7 +99,7 @@ trials:
         buffer_name: messages
         entry_delimiter: "|"
         int_types: ["int", "long", "unsigned long"]
-    - class: pyramid.trials.standard_enhancers.RenameEnhancer
+    - class: pyramid.trials.standard_enhancers.RenameRescaleEnhancer
       args:
         rules_csv: [ecodes/default_ecode_rules.csv, ecodes/AODR_ecode_rules.csv]
     - class: pyramid.trials.standard_adjusters.SignalSmoother

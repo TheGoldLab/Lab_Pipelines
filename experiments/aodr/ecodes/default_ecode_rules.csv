@@ -1,4 +1,6 @@
 type,value,name,base,min,max,scale,comment
+time,2,unknown_2,,,,,
+time,3,unknown_3,,,,,
 time,1005,trial_start,,,,,
 time,1007,sac_on,,,,,
 time,1010,fp_on,,,,,
