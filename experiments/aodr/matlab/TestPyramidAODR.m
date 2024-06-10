@@ -8,4 +8,4 @@ trial_file = TrialFile(data_file);
 trials = trial_file.read()
 
 %% Convert the trial file to FIRA format.
-FIRA = convertTrialFileToFIRA(trials, data_file)
+FIRA = convertTrialFileToFIRA(trials, data_file, {}, {'matlab_time', 'ttl'})

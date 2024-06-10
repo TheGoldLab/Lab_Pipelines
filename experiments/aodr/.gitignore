@@ -5,3 +5,6 @@ scratch.json
 
 # Python cache
 *.pyc
+
+# Matlab
+*.asv

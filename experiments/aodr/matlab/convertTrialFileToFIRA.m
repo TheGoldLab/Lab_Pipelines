@@ -1,4 +1,4 @@
-function dataInFIRAFormat = convertTrialFileToFIRA(dataInTrialFileFormat, filename, spikeChannelNames)
+function dataInFIRAFormat = convertTrialFileToFIRA(dataInTrialFileFormat, filename, spikeChannelNames, ignoreChannelNames)
 % function dataInFIRAFormat = convertTrialFileToFIRA(dataInTrialFileFormat, filename)
 %
 % Convert trialFile to FIRA
@@ -10,6 +10,10 @@ end
 
 if nargin < 3 || isempty(spikeChannelNames)
     spikeChannelNames = {};
+end
+
+if nargin < 4 || isempty(ignoreChannelNames)
+    ignoreChannelNames = {};
 end
 
 % Get numTrials -- remember first and last are dummies
@@ -141,7 +145,8 @@ for tt = 1:numTrials
     % Loop through numeric events from each trial.
     numeric_events = dataInTrialFileFormat(tt+1).numeric_events;
     if ~isempty(numeric_events)
-        ecode_names = setdiff(fieldnames(numeric_events), spikeChannelNames);
+        notEcodeNames = union(spikeChannelNames, ignoreChannelNames);
+        ecode_names = setdiff(fieldnames(numeric_events), notEcodeNames);
         for ee = 1:length(ecode_names)
             ecode_name = ecode_names{ee};
 
