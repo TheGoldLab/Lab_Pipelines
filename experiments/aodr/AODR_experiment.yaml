@@ -29,15 +29,15 @@ readers:
               value_index: 0
               min: 1
               max: 2
-      # A buffer that filters TTL events to just line number 3.
-      ttl_3:
+      # A buffer that filters TTL events to just line number 2.
+      ttl_2:
         reader_result_name: ttl
         transformers:
           - class: pyramid.neutral_zone.transformers.standard_transformers.FilterRange
             args:
               value_index: 0
-              min: 3
-              max: 4
+              min: 2
+              max: 3
     sync:
       is_reference: True
       buffer_name: ttl_1
@@ -89,8 +89,8 @@ trials:
   start_buffer: ttl_1
   start_value: 1
   start_value_index: 1
-  # Align trials when TTL line 3 goes high.
-  wrt_buffer: ttl_3
+  # Align trials when TTL line 2 goes high.
+  wrt_buffer: ttl_2
   wrt_value: 1
   wrt_value_index: 1
   enhancers:
