@@ -53,7 +53,7 @@ Lstay   = choice_switch==0;
 pdat  = nans(numCues, 3, numHazards, 3); 
 Lc1   = data.ids.choice==1;
 Lc2   = data.ids.choice==2;
-Ltask = data.ids.task_id>=2;
+Ltask = data.values.task_id>=2; % BSH NONO
 Lgood = Ltask & data.ids.score>=0;
 if ~any(Lgood)
     if ~isempty(options.axs) && options.axs(1) ~= -1
@@ -182,13 +182,13 @@ if ~(length(options.axs)==1 && options.axs(1)==-1)
                     lx(:,2) = cueArr(inds);
                     ps = logist_valLU1(hfits, lx);
                     % bias real/expected
-                    rmdat(counter,1:2) = [mean(cArr) mean(ps)];
+                    rmdat(counter,1:2) = [mean(cArr) mean(ps(:,2))]; % BSH expected size of ps?
                     % pct correct real/expected
                     ps(postArr(inds)<0) = 1-ps(postArr(inds)<0);
                     ps(postArr(inds)==0) = nan;
                     rmdat(counter,3:4) = ...
                         [mean(correctArr(inds), 'omitnan') ...
-                        mean(ps, 'omitnan')];
+                        mean(ps(:,2), 'omitnan')]; % BSH expected size of ps?
                 end
             end
         end
@@ -264,7 +264,7 @@ if ~(length(options.axs)==1 && options.axs(1)==-1)
         axes(axs(5)); cla reset; hold on;
         plot([-15 15], [0 0], 'k:');
         plot([0 0], [-15 15], 'k:');
-        Ltr = data.ids.task_id==1 & data.ids.score==1;
+        Ltr = data.values.task_id==1 & data.ids.score==1; % BSH NONO
         % plot targets
         umTs = unique(Ts(Ltr,1:2), 'rows');
         plot(umTs(:,1), umTs(:,2), 'go', 'MarkerSize', 15, 'MarkerFaceColor', gr);

@@ -1,6 +1,7 @@
 # data files from testing, debugging
 aodr-test.json
 aodr-test.hdf5
+aodr-test.mat
 scratch.json
 
 # Python cache

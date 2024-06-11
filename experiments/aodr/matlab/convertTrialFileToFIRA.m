@@ -163,18 +163,18 @@ for tt = 1:numTrials
                 end
 
                 if value_count == 1
-                    % treat [timestamp] as a "time" ecode.
+                    % treat [t] as a "time" ecode.
                     ecode_value = event_data(1,1);
                     ecode_type = 'time';
                 elseif value_count == 2 && event_data(1,1) == event_data(1,2)
-                    % also treat [timestamp, timestamp] as a "time" ecode.
+                    % also treat [t, t] as a "time" ecode.
                     ecode_value = event_data(1,1);
                     ecode_type = 'time';
                 else
-                    % treat [timestamp, value, ...] as a "value" ecode.
+                    % treat [t, v] or [t, v, ...] as a "value" ecode.
                     ecode_value = event_data(1,2);
                     ecode_type = 'value';
-                end                    
+                end
             end
 
             % Create the new ecode and save the data.
