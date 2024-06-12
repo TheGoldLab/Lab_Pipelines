@@ -53,7 +53,7 @@ Lstay   = choice_switch==0;
 pdat  = nans(numCues, 3, numHazards, 3); 
 Lc1   = data.ids.choice==1;
 Lc2   = data.ids.choice==2;
-Ltask = data.values.task_id>=2; % BSH NONO
+Ltask = data.ids.task_id>=2;
 Lgood = Ltask & data.ids.score>=0;
 if ~any(Lgood)
     if ~isempty(options.axs) && options.axs(1) ~= -1
@@ -264,7 +264,7 @@ if ~(length(options.axs)==1 && options.axs(1)==-1)
         axes(axs(5)); cla reset; hold on;
         plot([-15 15], [0 0], 'k:');
         plot([0 0], [-15 15], 'k:');
-        Ltr = data.values.task_id==1 & data.ids.score==1; % BSH NONO
+        Ltr = data.ids.task_id==1 & data.ids.score==1;
         % plot targets
         umTs = unique(Ts(Ltr,1:2), 'rows');
         plot(umTs(:,1), umTs(:,2), 'go', 'MarkerSize', 15, 'MarkerFaceColor', gr);
