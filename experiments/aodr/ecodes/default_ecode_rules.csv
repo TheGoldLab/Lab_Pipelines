@@ -1,15 +1,15 @@
 type,value,name,base,min,max,scale,comment
-time,2,unknown_2,,,,,
-time,3,unknown_3,,,,,
-time,1005,trial_start,,,,,
+time,2,reward_on,,,,,
+time,3,reward_off,,,,,
+time,1005,trial_start,,,,,TTL line 1 high
 time,1007,sac_on,,,,,
-time,1010,fp_on,,,,,
-time,1025,fp_off,,,,,
+time,1010,fp_on,,,,,TTL line 2 high
+time,1025,fp_off,,,,,TTL line 3 high
 time,3000,mean_on,,,,,
 time,3005,target_off,,,,,
 time,3006,fdbk_on,,,,,
 time,3116,fdbk_off,,,,,
-time,4904,all_off,,,,,
+time,4904,all_off,,,,,TTL lines 1-3 low
 time,4905,online_correct,,,,,
 time,4906,online_error,,,,,
 time,4907,online_ncerr,,,,,

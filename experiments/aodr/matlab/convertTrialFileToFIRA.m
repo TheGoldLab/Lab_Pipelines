@@ -110,8 +110,8 @@ for tt = 1:numTrials
                         if isempty(value)
                             value = nan;
                         elseif length(value) > 1
-                            fprintf('Warning: found >1 values for %s on trial %d\n', ...
-                                name, tt+1)
+                            fprintf('Warning: found >1 values for %s at trial file index %d, FIRA index %d\n', ...
+                                name, tt+1, tt)
                             value = value(1);
                         end
                         dataInFIRAFormat.ecodes.data(tt,Lcolumn) = value;
@@ -132,8 +132,8 @@ for tt = 1:numTrials
                     if isempty(value)
                         value = nan;
                     elseif length(value) > 1
-                        fprintf('Warning: found >1 values for %s on trial %d\n', ...
-                            enhancements{ee}, tt+1)
+                        fprintf('Warning: found >1 values for %s at trial file index %d, FIRA index %d\n', ...
+                            enhancements{ee}, tt+1, tt)
                         value = value(1);
                     end
                     dataInFIRAFormat.ecodes.data(tt,Lcolumn) = value;
@@ -159,7 +159,8 @@ for tt = 1:numTrials
                 ecode_type = 'value';
             else
                 if event_count > 1
-                    fprintf('Warning: found >1 events for %s on trial %d\n', ecode_name, tt+1)
+                    fprintf('Warning: found >1 values for %s at trial file index %d, FIRA index %d\n', ...
+                        ecode_name, tt+1, tt)
                 end
 
                 if value_count == 1

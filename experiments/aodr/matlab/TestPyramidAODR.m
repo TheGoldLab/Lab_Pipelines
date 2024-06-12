@@ -9,12 +9,12 @@ trial_file_path = fullfile(data_dir, 'aodr-test.hdf5');
 
 %% Test some reading and conversion steps in isolation.
 
-% disp('Reading trial file.')
-% trial_file = TrialFile(trial_file_path);
-% trials = trial_file.read()
-%
-% disp('Converting to FIRA and plotting.')
-% FIRA = convertTrialFileToFIRA(trials, trial_file_path, {}, {'matlab_time', 'ttl'})
+disp('Reading trial file.')
+trial_file = TrialFile(trial_file_path);
+trials = trial_file.read()
+
+disp('Converting to FIRA and plotting.')
+FIRA = convertTrialFileToFIRA(trials, trial_file_path, {}, {'matlab_time', 'ttl'})
 
 
 %% Put it all together and plot something.

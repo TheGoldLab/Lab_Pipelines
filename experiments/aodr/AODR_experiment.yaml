@@ -20,7 +20,7 @@ readers:
       stream_name: Rhythm Data
       result_name: ttl
     extra_buffers:
-      # A buffer that filters TTL events to just line number 1.
+      # A buffer that filters TTL events to just line number 1 (trial start)
       ttl_1:
         reader_result_name: ttl
         transformers:
@@ -29,7 +29,7 @@ readers:
               value_index: 0
               min: 1
               max: 2
-      # A buffer that filters TTL events to just line number 2.
+      # A buffer that filters TTL events to just line number 2 (fp on).
       ttl_2:
         reader_result_name: ttl
         transformers:
