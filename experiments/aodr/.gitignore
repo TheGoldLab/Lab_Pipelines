@@ -2,6 +2,8 @@
 aodr-test.json
 aodr-test.hdf5
 aodr-test.mat
+aodr-test.dot
+aodr-test.png
 scratch.json
 
 # Python cache

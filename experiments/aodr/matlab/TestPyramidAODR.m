@@ -1,34 +1,49 @@
 % Add Lab_Matlab_Utilities to Matlab path.
 % https://github.com/TheGoldLab/Lab_Matlab_Utilities
+%
+% Add matlab/ subfolder of Pyramid to the Matlab path.
+% https://github.com/benjamin-heasly/pyramid/tree/main/matlab
 
+
+close all
 clear
 clc
 
 data_dir = '../';
 trial_file_path = fullfile(data_dir, 'aodr-test.hdf5');
 
+
 %% Test some reading and conversion steps in isolation.
 
-% disp('Reading trial file.')
-% trial_file = TrialFile(trial_file_path);
-% dataInTrialFileFormat = trial_file.read()
-%
-% disp('Converting to FIRA and plotting.')
-% FIRA = convertTrialFileToFIRA(dataInTrialFileFormat, trial_file_path)
+disp('Reading trial file.')
+trial_file = TrialFile(trial_file_path);
+trials = trial_file.read();
+
+disp('Converting to FIRA.')
+FIRA = convertTrialFileToFIRA(trials, trial_file_path)
 
 
-%% Put it all together and plot something.
+%% Plot some eye data.
 
-% task_id is coming as a "value" rather than an "id".
-% Pyramid could fix this.
-%   - rename enhancement_categories to just "categories"
-%   - use this to annotate buffers as well as enhancements.
-%   - RenameRescale enhancer add categories from CSV to this.
-%   - Annoying, but possible, to rummage around in existing categories.
-%   - convertTrialFileToFIRA check categories for numeric event ecodes.
+disp('Plotting gaze from trial file.')
 
-% For the moment, I changed the local plotAODR_sessionBehavior to look at
-% data.values.task_id instead of data.ids.task_id
+figure; hold on;
+for ii = 1:length(trials)
+    gazeX = trials(ii).signals.gaze.signal_data(:,1);
+    gazeY = trials(ii).signals.gaze.signal_data(:,2);
+
+    subplot(1,3,1); hold on;
+    plot(gazeX)
+    subplot(1,3,2); hold on;
+    plot(gazeY)
+    subplot(1,3,3); hold on;
+    plot(gazeX, gazeY)
+end
+
+
+%% Put it all together with AODR behavior figures.
+
+disp('Plotting AODR behavior figures.')
 
 plotAODR_sessionBehavior( ...
     'filename', trial_file_path, ...
