@@ -170,14 +170,16 @@ class CustomEnhancer(TrialEnhancer):
                 else:
                     score = 0                
                     trial.add_enhancement("choice", 3-correct_target, "id")
-                rt_millis = saccades[saccade_index]["t_start"] * 1000
-                trial.add_enhancement("RT", rt_millis)
+
                 trial.add_enhancement("scored_saccade_index", saccade_index, "id")
                 trial.add_enhancement("scored_saccade", saccades[saccade_index], "value")
-                trial.add_enhancement("sac_on", trial.get_one("RT")+trial.get_time("fp_off"), "time")
-                #print(target_angles)
-                #print(target_index)
-                #print(f'Choice={trial.get_one("choice")}, score={score}, RT={trial.get_one("RT"):.4f}')
+
+                saccade_start = saccades[saccade_index]["t_start"]
+                trial.add_enhancement("sac_on", saccade_start, "time")
+
+                fp_off_time = trial.get_time("fp_off")
+                rt_millis = (saccade_start - fp_off_time) * 1000
+                trial.add_enhancement("RT", rt_millis, "value")
 
         # 1=correct, 0=error, -1=nc, -2=brfix,-3=sample
         trial.add_enhancement("score", score, "id")
