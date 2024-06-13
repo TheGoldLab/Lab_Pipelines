@@ -17,7 +17,7 @@ trial_file_path = fullfile(data_dir, 'aodr-test.hdf5');
 
 disp('Reading trial file.')
 trial_file = TrialFile(trial_file_path);
-trials = trial_file.read();
+trials = trial_file.read()
 
 disp('Converting to FIRA.')
 FIRA = convertTrialFileToFIRA(trials, trial_file_path)
