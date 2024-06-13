@@ -170,7 +170,8 @@ class CustomEnhancer(TrialEnhancer):
                 else:
                     score = 0                
                     trial.add_enhancement("choice", 3-correct_target, "id")
-                trial.add_enhancement("RT", saccades[saccade_index]["t_start"])
+                rt_millis = saccades[saccade_index]["t_start"] * 1000
+                trial.add_enhancement("RT", rt_millis)
                 trial.add_enhancement("scored_saccade_index", saccade_index, "id")
                 trial.add_enhancement("scored_saccade", saccades[saccade_index], "value")
                 trial.add_enhancement("sac_on", trial.get_one("RT")+trial.get_time("fp_off"), "time")
