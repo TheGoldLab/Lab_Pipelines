@@ -53,8 +53,8 @@ from open_ephys.analysis import Session
 directory = '/Users/benjaminheasly/open-ephys/from_lowell/Anubis_2024-06-17_13-58-27'
 session = Session(directory)
 
-# Edit this to limit CSV size to something manageable.
-end_time = 4000
+# Lower this limit if CSV size is unmanageable.
+end_time = 1e6
 
 # Print a CSV header row.
 print("stream name&stream index&timestamp&sample number&data")

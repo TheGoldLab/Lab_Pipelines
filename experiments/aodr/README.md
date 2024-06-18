@@ -81,6 +81,8 @@ You'll need a couple of dependencies in Matlab:
 
  - Locate and update, or clone [Lab_Matlab_Utilities](https://github.com/TheGoldLab/Lab_Matlab_Utilities) and add the whole thing with subfolders to your Matlab path.
  - Locate and update, or clone [Pyramd](https://github.com/benjamin-heasly/pyramid/tree/main/matlab) and add the `pyramid/matlab/` folder to your Matlab path.
+ - Statistics and Machine Learning Toolbox (with eg nanstd)
+ - Optimization Toolbox (with eg fmincon)
 
 From there you should be able to create a Gold lab data session for `aodr-test.hdf5` and plot things.
 
