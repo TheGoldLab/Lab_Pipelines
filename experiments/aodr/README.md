@@ -13,20 +13,20 @@ conda activate gold_pipelines
 
 ## Data location
 
-Right now the Pyramid config defaults to run a session of data from 2024-06-05: [Anubis_2024-06-05_12-38-25](https://upenn.box.com/s/sntqyhv5yp6pq4t79wwsgtwj361uau1i).
+Right now the Pyramid config defaults to run a session of data from 2024-06-05: [Anubis_2024-06-17_13-58-27](https://upenn.box.com/s/xwq8tood2wtlapso0j8inadx2x2oo3ps).
 
 If you don't have it already, you should get this folder on your local machine and note the path leading up to it.
 
 If the full folder path is
 
 ```
-/home/ninjaben/open-ephys/from_lowell/Anubis_2024-06-05_12-38-25
+/Users/benjaminheasly/open-ephys/from_lowell/Anubis_2024-06-17_13-58-27
 ```
 
 Then the path leading up to it is
 
 ```
-/home/ninjaben/open-ephys/from_lowell/
+/Users/benjaminheasly/open-ephys/from_lowell/
 ```
 
 We'll want to use this leading path, below.
@@ -46,7 +46,7 @@ This command will draw a sweet graph of the Pyramid config:
 
 ```
 pyramid graph \
---search-path /home/ninjaben/open-ephys/from_lowell \
+--search-path /Users/benjaminheasly/open-ephys/from_lowell \
 --experiment AODR_experiment.yaml \
 --graph-file aodr-test.png
 ```
@@ -55,7 +55,7 @@ This command will run through trials and update several plot figures for each tr
 
 ```
 pyramid gui \
---search-path /home/ninjaben/open-ephys/from_lowell \
+--search-path /Users/benjaminheasly/open-ephys/from_lowell \
 --experiment AODR_experiment.yaml \
 --subject AODR_subject.yaml \
 --trial-file aodr-test.hdf5
@@ -65,7 +65,7 @@ This command will run through trials as fast as it can, with no plots:
 
 ```
 pyramid convert \
---search-path /home/ninjaben/open-ephys/from_lowell \
+--search-path /Users/benjaminheasly/open-ephys/from_lowell \
 --experiment AODR_experiment.yaml \
 --subject AODR_subject.yaml \
 --trial-file aodr-test.hdf5

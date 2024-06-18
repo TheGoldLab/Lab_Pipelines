@@ -5,9 +5,4 @@ aodr-test.mat
 aodr-test.dot
 aodr-test.png
 scratch.json
-
-# Python cache
-*.pyc
-
-# Matlab
-*.asv
+events.csv

@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Python cache
+*.pyc
+__pycache__/
+
+# Matlab
+*.asv
