@@ -39,7 +39,7 @@
 #   - text contains "UDP Events sync" have purple background
 #
 # Estimate the FIRA trial index that each event would go to.
-#   - cell F1 add header: "approx FIRA index"
+#   - cell F1 add header: "approx trial"
 #   - cell F2 add number: 1
 #   - cell F3 add formula: =F2+and(A3="TTL Rhythm Data", E3="1=1")
 #   - fill down column F with this formula
@@ -50,7 +50,7 @@
 from open_ephys.analysis import Session
 
 # Edit this to be your local path to a data session.
-directory = '/Users/benjaminheasly/open-ephys/from_lowell/Anubis_2024-06-20_12-48-42'
+directory = '/Users/benjaminheasly/open-ephys/from_lowell/Anubis_T3_2024-06-21_13-30-39'
 session = Session(directory)
 
 # Lower this limit if CSV size is unmanageable.

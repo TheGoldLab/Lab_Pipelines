@@ -16,7 +16,7 @@ readers:
   ttl_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionNumericEventReader
     args:
-      session_dir: "Anubis_2024-06-20_12-48-42"
+      session_dir: "Anubis_T3_2024-06-21_13-30-39"
       stream_name: Rhythm Data
       result_name: ttl
     extra_buffers:
@@ -49,7 +49,7 @@ readers:
   message_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
     args:
-      session_dir: "Anubis_2024-06-20_12-48-42"
+      session_dir: "Anubis_T3_2024-06-21_13-30-39"
       result_name: messages
     extra_buffers:
       # Replace read messages with alternate versions that we parse in ./python/udp_events.py
@@ -69,10 +69,11 @@ readers:
       timestamps: timestamp
       keys: float(value.split("key=")[-1])
       pairing_strategy: closest
+      sync_snap_threshold: 0.001
   gaze_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
     args:
-      session_dir: "Anubis_2024-06-20_12-48-42"
+      session_dir: "Anubis_T3_2024-06-21_13-30-39"
       result_name: gaze
       stream_name: PXIe-6363
       channel_names: ["CH1", "CH2"]

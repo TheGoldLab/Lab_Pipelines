@@ -48,9 +48,10 @@ for ff = 1:numel(has_names)
     name = has_names{ff};
     trials = find(has.(name));
     rows = ff * ones(size(trials));
-    line(trials, rows, 'Marker', '|', 'LineStyle', 'none');
+    line(trials, rows, 'Marker', '.', 'LineStyle', 'none');
 end
 set(gca(), 'TickLabelInterpreter', 'none');
+
 yticklabels(has_names);
 ylim([0, numel(has_names) + 1]);
 

@@ -185,12 +185,12 @@ class CustomEnhancer(TrialEnhancer):
                 # Seeing like 138ms, 152ms, 140ms
                 # Expecting more like 250ms
                 # Are these real in the data?
-                print(f"ttl 2 {trial.numeric_events['ttl'].times(2)}")
-                print(f"fp_on {trial.get_time('fp_on')}")
-                print(f"ttl 3 {trial.numeric_events['ttl'].times(3)}")
-                print(f"fp_off {trial.get_time('fp_off')}")
-                print(f"sac_on {saccade_start}")
-                print(f"RT {rt_millis}")
+                # print(f"ttl 2 {trial.numeric_events['ttl'].times(2)}")
+                # print(f"fp_on {trial.get_time('fp_on')}")
+                # print(f"ttl 3 {trial.numeric_events['ttl'].times(3)}")
+                # print(f"fp_off {trial.get_time('fp_off')}")
+                # print(f"sac_on {saccade_start}")
+                # print(f"RT {rt_millis}")
 
         # 1=correct, 0=error, -1=nc, -2=brfix,-3=sample
         trial.add_enhancement("score", score, "id")
