@@ -13,14 +13,14 @@ conda activate gold_pipelines
 
 ## Data location
 
-Right now the Pyramid config defaults to run a session of data from 2024-06-05: [Anubis_2024-06-17_13-58-27](https://upenn.box.com/s/xwq8tood2wtlapso0j8inadx2x2oo3ps).
+Right now the Pyramid config defaults to run a session of data from 2024-06-20: [Anubis_2024-06-20_12-48-42](https://upenn.box.com/s/zuf12o93tjdv9u1zmt6bz39s122uuhdv).
 
 If you don't have it already, you should get this folder on your local machine and note the path leading up to it.
 
 If the full folder path is
 
 ```
-/Users/benjaminheasly/open-ephys/from_lowell/Anubis_2024-06-17_13-58-27
+/Users/benjaminheasly/open-ephys/from_lowell/Anubis_2024-06-20_12-48-42
 ```
 
 Then the path leading up to it is
