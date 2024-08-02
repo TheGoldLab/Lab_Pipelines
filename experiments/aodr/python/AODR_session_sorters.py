@@ -27,23 +27,15 @@ class OpenEphysSessionSorter():
     https://github.com/open-ephys/open-ephys-python-tools/blob/main/src/open_ephys/analysis/README.md
 
     Args:
-        session_dir:        Directory for Open Ephys Python Tools to seach for saved data (Open Ephys Binary or NWB2 format)
-        file_finder:        Utility to find() files in the conigured Pyramid configured search path.
-                            Pyramid will automatically create and pass in the file_finder for you.
-        stream_name:        Which Open Ephys data stream to select for reading (default None, take the first stream).
-        channel_names:      List of channel names to keep within the selected data stream (default None, take all channels).
-        record_node_index:  When session_dir contains record node subdirs, which node/dir to pick (default -1, the last one).
-        recording_index:    When which recording to pick within a record node (default -1, the last one).
-        result_name:        Name to use for the Pyramid SignalChunk results (default None, use the stream_name).
-
-    Like above, we will define some stuff first, likely indicating things like:
-    1) sorter
-    2) input file
-    3) output file
-    4) probe config
-    5) channels
-    6) GUI usage
-    7) Filter and params
+        session_dir:                        The open ephys session folder you'd like to sort
+        stream_name:                        The data source you want to sort (e.g., 'Rhythm Data' for Open Ephys Intan Headstages)
+        channel_names:                      List of integers specifying the channel numbers
+        step_names:                         List of strings that correspond to steps/methods of the current class, in order, to implement
+        result_name:                        Not currently used
+        sorter_name:                        The sorting engine to use, e.g., 'spykingcircus2', limited by the sorters installed
+        out_folder:                         String indicating the output folder
+        freq_min:                           Min frequency (Hz) for the bandpass filter
+        freq_max:                           Max frequency (Hz) for the bandpass filter            
     """
 
     def __init__(
@@ -56,7 +48,7 @@ class OpenEphysSessionSorter():
         sorter_name: str = 'spykingcircus2',
         out_folder: str = None,
         freq_min: int = 300,
-        freq_max = 6000
+        freq_max: int = 6000
     ) -> None:
         self.session_dir = session_dir
         self.stream_name = stream_name
@@ -64,7 +56,7 @@ class OpenEphysSessionSorter():
         self.step_names = step_names
         self.result_name = result_name
         self.sorter_name = sorter_name
-        self.out_folder = session_dir.split("Raw")[0]+"Sorted/"+session_dir.split("/")[-1]+"/"+self.sorter_name
+        self.out_folder = out_folder
         self.freq_min = freq_min
         self.freq_max = freq_max
 
@@ -98,10 +90,10 @@ class OpenEphysSessionSorter():
 
     def run_one_sorter_and_analyzer(self):
         # I believe a custom compute json-like file could also be used.
-        job_kwargs = dict(n_jobs=-1, progress_bar=True, chunk_duration="1s")
+        job_kwargs = dict(n_jobs=4, progress_bar=True, chunk_duration="1s")
         si.set_global_job_kwargs(**job_kwargs)
         sorting = si.run_sorter(self.sorter_name, self.recording, output_folder=self.out_folder+"/"+self.sorter_name, 
-                                verbose=False, remove_existing_folder=True)
+                                verbose=True, remove_existing_folder=True)
         sorting_analyzer = si.create_sorting_analyzer(sorting, self.recording,
                                                     format="binary_folder", folder=self.out_folder+"/analyzer", 
                                                     overwrite=True,
