@@ -68,6 +68,15 @@ class OpenEphysSessionSorter():
             except Exception as err:
                 done = f'...Fail, Error: {err}'
             print(step, done)
+
+    def clean_tree(self):
+        # clean
+        folders = [
+            self.out_folder
+        ]
+        for folder in folders:
+            if Path(folder).exists():
+                shutil.rmtree(folder)
     
     def read_data(self):
         self.logger = logging.getLogger(__name__)
