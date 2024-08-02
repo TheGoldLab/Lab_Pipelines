@@ -23,6 +23,6 @@ cli.main(["convert",
         "gaze_x_reader.session_dir="+dataSearchPath+currentFile,
         "gaze_y_reader.session_dir="+dataSearchPath+currentFile,
         "pupil_reader.session_dir="+dataSearchPath+currentFile,
-        "phy_reader.params_file="+"/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Sorted/"+currentFile+"/spykingcircus2/phy/params.py"])
+        "phy_reader.params_file="+"/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Sorted/"+currentFile+"/phy/params.py"])
 
 
