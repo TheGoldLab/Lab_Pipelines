@@ -35,5 +35,6 @@ dependencies:
     - spikeinterface[full,widgets]
     - spikeinterface-gui
     - tridesclous
+    - mountainsort5
     - open-ephys-python-tools==0.1.8
     - git+https://github.com/benjamin-heasly/pyramid
