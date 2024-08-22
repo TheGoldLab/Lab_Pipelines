@@ -7,21 +7,21 @@ We use Git, software that tracks versions of files, to manage the versions of ou
 
 To run data through our pipeline you will need 3 primary repositories:
 
-1) The [Pyramid](https://github.com/benjamin-heasly/pyramid) repository contains code that takes raw data (like neural, eye, and behavioral) and creates a file where data are aligned by trial (a "TrialFile" with .hdf5 extension). This is custom preprocessing that largely depends on how you are communicating across devices to indicate when different events (e.g., fixation onset or stimulus onset) are occurings.
+1) The [Pyramid](https://github.com/benjamin-heasly/pyramid) repository contains code that takes raw data (like neural, eye, and behavioral) and creates a file where data are aligned by trial (a "TrialFile" with .hdf5 extension). This is custom preprocessing that largely depends on how you are communicating across devices to indicate when different events (e.g., fixation onset or stimulus onset) are occuring.
 
 2) The [Lab_Matlab_Utilities](https://github.com/TheGoldLab/Lab_Matlab_Utilities) repository contains custom utilities specifically for the Gold Lab. These include operations to deal with data files, plotting, etc.
 
 3) This Lab_Pipelines repository contains documents and configurations for lab data pipelines (spike sorting, trial deliniation, etc.).
 
 ## Install Git/Github Desktop for retrieving the repositories
-The only change I made to defaults was in configuring the terminal emulator to use with Git Bash. I chose to use Windows' default console window.
+The only change you'll need to make to the default installation is to configure the terminal emulator to use with Git Bash. For Windows, choose the default console window.
 Install GitHub desktop and sign in.
 In the "Current repository" dropdown menu, click "Add," then "Clone repository..." to add pyramid from benjamin-heasly's GitHub: https://github.com/benjamin-heasly/pyramid.
 Click "Clone a repository from the Internet..." and add Lab_Matlab_Utilities from The Gold Lab GitHub: https://github.com/TheGoldLab/Lab_Matlab_Utilities.
 Do the same to add Lab_Pipelines from The Gold Lab GitHub: https://github.com/TheGoldLab/Lab_Pipelines.
 
 ## Installing Pyramid
-Documentation and installation instructions are included in the [Pyramid](https://github.com/benjamin-heasly/pyramid) readme.
+Documentation and installation instructions are included in the [Pyramid](https://github.com/benjamin-heasly/pyramid) readme, but the below steps should be sufficient.
 
 If you don't already have Python, install it from python.org or the Microsoft Store.
 
@@ -29,7 +29,7 @@ Miniconda is a smaller installation of anaconda, a package manager and environme
 
 1) Install miniconda and follow setup instructions.
 2) Write down its location for later.
-3) Launch Anaconda Prompt (miniconda3) from the Start menu.
+3) Launch Anaconda Prompt (miniconda3) from the Start menu/applications folder.
 4) To set up the pyramid environment, copy and paste this code into Anaconda Prompt and run it:
 ```
 cd pyramid
@@ -45,7 +45,7 @@ pyramid --help
 This helps ensure that you are able to use pyramid independent of the Lab Pipeline repo.
 
 ## Testing Pyramid
-Now, we will see if we can use the new pipeline with pyramid on some raw data. There are example scripts written in the Python programming language that pass data through pyramid. These allow you to specify the locations of folders on your computer and the file you want to convert and then run pyramid, avoiding having to interact with the computer through the command line as suggested in the pyramid documentation/readme.
+Now, we will see if you can use the new pipeline with pyramid on some raw data. There are example scripts written in the Python programming language that pass data through pyramid. These allow you to specify the locations of folders on your computer and the file you want to convert and then run pyramid, avoiding having to interact with the computer through the command line as suggested in the pyramid documentation/readme.
 
 Older data were likely collected with a Plexon system and have a .plx file extension. On the other hand, OpenEphys is the software that accepts data from Neuropixels probes (large-scale neural recording), and these files have an .nwb extension (although it can also save binary files). These different formats require different "readers" to extract data into pyramid. We are also using a different spike sorting algorithm for OpenEphys data. There are separate Python scripts depending on whether you're converting a .plx or .nwb file.
 
@@ -61,8 +61,8 @@ conda env create -f environment.yml
 ```
 conda activate gold_pipelines
 ```
-You should see "gold_pipelines" in the bottom right corner of VS Code now. Select the interpreter by clicking the bottom right corner and then "gold_pipelines" from the dropdown menu that appears under the search bar in the top middle of the screen.
-Now File>Open Folder> select GitHub\Lab_Pipelines\experiments\aodr (you could make a new folder for your experiment - the example is based on the AODR paradigm).
+You should see "gold_pipelines" in the bottom right corner of VS Code now. You can also select the interpreter by clicking the bottom right corner and then "gold_pipelines" from the dropdown menu that appears under the search bar in the top middle of the screen.
+Now: File>Open Folder> select GitHub\Lab_Pipelines\experiments\aodr (you could make a new folder for your experiment - the example is based on the AODR paradigm).
 Open Pyramid_Example_Plexon.py for .plx files or spikeinterface_testing_v2.ipynb for OpenEphys.
 Follow the documentation written in the spikeinterface notebook to run OpenEphys data through pyramid. If using Pyramid_Example_Plexon.py, change the path names and file name to the corresponding locations and files on your computer. You might want to create a separate, new folder for output.
 Run.
