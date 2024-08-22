@@ -1,10 +1,10 @@
 # Experiments
 
-This folder contains experiment config for lab experiments.
+This folder contains experiment configs for lab experiments.
 
 For Pyramid, this might include:
 
- - Pyramid experiment YAML files
- - Pyramid / NWB subject YAML files
+ - Pyramid experiment YAML files (defines readers, parameters, and enhancements)
+ - Pyramid subject YAML files
  - Pyramid custom transformers, enhancers, plotters, etc.
  - Pyramid ecode CSV rule files

@@ -1,4 +1,5 @@
 # Pipelines
+This is currently obsolete, please ignore this folder!
 
 Config and pipeline definitions for spike sorting and other Docker-based pipelines.
 
