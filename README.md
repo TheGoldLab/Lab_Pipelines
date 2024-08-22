@@ -7,9 +7,9 @@ We use Git, software that tracks versions of files, to manage the versions of ou
 
 To run data through our pipeline you will need 3 primary repositories:
 
-1) The Pyramid[https://github.com/benjamin-heasly/pyramid] repository contains code that takes raw data (like neural, eye, and behavioral) and creates a file where data are aligned by trial (a "TrialFile" with .hdf5 extension). This is custom preprocessing that largely depends on how you are communicating across devices to indicate when different events (e.g., fixation onset or stimulus onset) are occurings.
+1) The [Pyramid](https://github.com/benjamin-heasly/pyramid) repository contains code that takes raw data (like neural, eye, and behavioral) and creates a file where data are aligned by trial (a "TrialFile" with .hdf5 extension). This is custom preprocessing that largely depends on how you are communicating across devices to indicate when different events (e.g., fixation onset or stimulus onset) are occurings.
 
-2) The Lab_Matlab_Utilities[https://github.com/TheGoldLab/Lab_Matlab_Utilities] repository contains custom utilities specifically for the Gold Lab. These include operations to deal with data files, plotting, etc.
+2) The [Lab_Matlab_Utilities](https://github.com/TheGoldLab/Lab_Matlab_Utilities) repository contains custom utilities specifically for the Gold Lab. These include operations to deal with data files, plotting, etc.
 
 3) This Lab_Pipelines repository contains documents and configurations for lab data pipelines (spike sorting, trial deliniation, etc.).
 
@@ -21,7 +21,7 @@ Click "Clone a repository from the Internet..." and add Lab_Matlab_Utilities fro
 Do the same to add Lab_Pipelines from The Gold Lab GitHub: https://github.com/TheGoldLab/Lab_Pipelines.
 
 ## Installing Pyramid
-Documentation and installation instructions are included in the Pyramid[https://github.com/benjamin-heasly/pyramid] readme.
+Documentation and installation instructions are included in the [Pyramid](https://github.com/benjamin-heasly/pyramid) readme.
 
 If you don't already have Python, install it from python.org or the Microsoft Store.
 
