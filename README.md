@@ -25,14 +25,14 @@ Documentation and installation instructions are included in the [Pyramid](https:
 
 If you don't already have Python, install it from python.org or the Microsoft Store.
 
-Miniconda is a smaller installation of anaconda, a package manager and environment management system. An environment is an isolated virtual space to install a set of software packages for a project. This allows you to avoid conflicts between packages. Pyramid has its own environment that contains Python dependencies. Here, we will install and activate the environment where pyramid runs.
+Miniconda is a smaller installation of anaconda, a package manager and environment management system. An environment is an isolated virtual space to install a set of software packages for a project. This allows you to avoid conflicts between packages. Pyramid has its own environment that contains Python dependencies. Here, we will install and activate the environment where pyramid runs. If you have a Mac, you can also just use regular Anaconda instead of miniconda.
 
 1) Install miniconda and follow setup instructions.
 2) Write down its location for later.
-3) Launch Anaconda Prompt (miniconda3) from the Start menu/applications folder.
-4) To set up the pyramid environment, copy and paste this code into Anaconda Prompt and run it:
+3) Launch Anaconda Prompt (miniconda3) from the Start menu/applications folder. You can use a standard terminal for Mac.
+4) To set up the pyramid environment, copy and paste this code into Anaconda Prompt (or terminal) and run it:
 ```
-cd pyramid
+cd <your_parent_path>\GitHub\pyramid
 conda env create -f environment.yml
 ```
 5) Activate the environment on your machine. Copy and paste this code into Anaconda Prompt and run it:
