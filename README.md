@@ -52,7 +52,7 @@ Older data were likely collected with a Plexon system and have a .plx file exten
 Open Visual Studio Code (VS Code) or another integrated development environment (IDE) for editing code.
 Install the Python extension for VS Code (also under the Extensions tab on the left) to make it work as a Python editor.
 The custom Python code works within the gold_pipelines conda environment. You must first create this environment, similar to what you did for pyramid.
-In the terminal, copy and paste the code below, after subsituting your parent directory, to create and activate the gold_pipelines conda environment. You can read more about activation here.
+In the terminal of VS Code copy and paste the code below, after subsituting your parent directory, to create and activate the gold_pipelines conda environment. You can read more about activation here.
 ```
 cd <your_parent_path>\GitHub\Lab_Pipelines
 conda env create -f environment.yml
@@ -61,11 +61,11 @@ conda env create -f environment.yml
 ```
 conda activate gold_pipelines
 ```
+In VS Code: File>Open Folder> select GitHub\Lab_Pipelines\experiments\aodr (you could make a new folder for your experiment - the example is based on the AODR paradigm). 
+In the "python" subfolder, open Pyramid_Example_Plexon.py to test the script on a .plx file, or spikeinterface_testing_v2.ipynb to test an OpenEphys file.
 You should see "gold_pipelines" in the bottom right corner of VS Code now. You can also select the interpreter by clicking the bottom right corner and then "gold_pipelines" from the dropdown menu that appears under the search bar in the top middle of the screen.
-Now: File>Open Folder> select GitHub\Lab_Pipelines\experiments\aodr (you could make a new folder for your experiment - the example is based on the AODR paradigm).
-Open Pyramid_Example_Plexon.py for .plx files or spikeinterface_testing_v2.ipynb for OpenEphys.
 Follow the documentation written in the spikeinterface notebook to run OpenEphys data through pyramid. If using Pyramid_Example_Plexon.py, change the path names and file name to the corresponding locations and files on your computer. You might want to create a separate, new folder for output.
-Run.
+Run it!
 
 ## Installing MATLAB and running test scripts
 MATLAB is the standard programming language for scientific computing in the neurosciences. Custom scripts for data analysis (after preprocessing with pyramid) are written in MATLAB.
