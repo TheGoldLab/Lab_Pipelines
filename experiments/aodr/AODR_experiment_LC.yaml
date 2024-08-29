@@ -11,7 +11,7 @@ experiment:
   lab: The Gold Lab
   monkey: 'Anubis'
   keywords:
-    - dlPFC
+    - LC
 readers:
   # Read Open Ephys TTL events as Pyramid numeric events like: [timestamp, line_number, line_state, processor_id]
   ttl_reader:

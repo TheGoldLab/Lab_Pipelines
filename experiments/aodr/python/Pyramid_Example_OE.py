@@ -1,3 +1,8 @@
+# The jupyter notebook "Full_OE_Example.ipynb" serves as a more complete example of processing a file from Open Ephys.
+# This has not been tested across systems extensively and may require altering some of the paths below
+# Specifically, the pyramidSearchPath sometimes needs to include /ecodes/, and other times not.
+# This script also assumes the .nwb file from OE has been sorted into a .phy output file.
+
 from pyramid import cli
 import pandas as pd
 import os
