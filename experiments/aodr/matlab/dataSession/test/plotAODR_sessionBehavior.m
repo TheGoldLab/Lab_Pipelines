@@ -9,6 +9,7 @@ arguments
     options.sortType     = 'Sorted';
     options.converter    = 'Pyramid';
     options.convertSpecs = 'AODR_experiment';
+    options.forceConvert = false;
     options.axs          = [];
 end
 
@@ -19,7 +20,8 @@ end
     'monkey',       options.monkey, ...
     'sortType',     options.sortType, ...
     'converter',    options.converter, ...
-    'convertSpecs', options.convertSpecs);
+    'convertSpecs', options.convertSpecs, ...
+    'forceConvert', options.forceConvert);
 
 % For printing on fig
 [~,filename,~] = fileparts(obj.convertedFilename);
