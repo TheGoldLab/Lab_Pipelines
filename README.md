@@ -29,7 +29,8 @@ Miniconda is a smaller installation of Anaconda, a package manager and environme
 
 1) Install miniconda/anaconda and follow setup instructions.
 2) Write down its location for later.
-3) Windows: Launch Anaconda Prompt from the Start menu/applications folder. MAC: You can use a standard terminal/command line if there is no Anaconda Prompt installed.
+3) Windows: Launch Anaconda Prompt from the Start menu/applications folder.
+   MAC: You can use a standard terminal/command line if there is no Anaconda Prompt installed.
 4) To set up the pyramid environment, copy and paste this code into Anaconda Prompt (or terminal) and run it (replace <> with the path on your machine):
 ```
 cd <your_parent_path>\GitHub\pyramid
@@ -51,6 +52,7 @@ Older data were likely collected with a Plexon system and have a .plx file exten
 
 Open Visual Studio Code (VS Code) or another integrated development environment (IDE) for editing code.
 Install the Python extension for VS Code (also under the Extensions tab on the left) to make it work as a Python editor.
+Install the Jupyter extension if you'd like to use notebooks (necessary for the Open Ephys example).
 The custom Python code works within the gold_pipelines conda environment. You must first create this environment, similar to what you did for pyramid.
 In the terminal of VS Code copy and paste the code below, after subsituting your parent directory, to create and activate the gold_pipelines conda environment. You can read more about activation here.
 ```
@@ -62,9 +64,11 @@ conda env create -f environment.yml
 conda activate gold_pipelines
 ```
 In VS Code: File>Open Folder> select GitHub\Lab_Pipelines\experiments\aodr (you could make a new folder for your experiment - the example is based on the AODR paradigm). 
-In the "python" subfolder, open Pyramid_Example_Plexon.py to test the script on a .plx file, or spikeinterface_testing_v2.ipynb to test an OpenEphys file.
-You should see "gold_pipelines" in the bottom right corner of VS Code now. You can also select the interpreter by clicking the bottom right corner and then "gold_pipelines" from the dropdown menu that appears under the search bar in the top middle of the screen.
-Follow the documentation written in the spikeinterface notebook to run OpenEphys data through pyramid. If using Pyramid_Example_Plexon.py, change the path names and file name to the corresponding locations and files on your computer. You might want to create a separate, new folder for output.
+In the "python" subfolder, open Pyramid_Example_Plexon.py to test the script on a .plx file, or Full_OE_Example.ipynb to test an OpenEphys file.
+
+If you are using the plexon example, make sure you select the gold_pipelines environment as the [python interpreter](https://code.visualstudio.com/docs/python/environments#_select-and-activate-an-environment). You should see "gold_pipelines" in the bottom right corner of VS Code now. You can also select the interpreter by clicking the bottom right corner and then "gold_pipelines" from the dropdown menu that appears under the search bar in the top middle of the screen. Change the path names and file names to the corresponding locations and files on your computer. You might want to create a separate, new folder for output. Run it!
+
+If you are using the Open Ephys example, select the gold_pipelines environment as your [Kernel](https://code.visualstudio.com/docs/datascience/jupyter-kernel-management). Follow the documentation written in the notebook to run OpenEphys data through pyramid. 
 Run it!
 
 ## Installing MATLAB and running test scripts
