@@ -88,7 +88,7 @@ class OpenEphysSessionSorter():
     
     def read_data(self):
         self.logger = logging.getLogger(__name__)
-        self.recording_file = self.session_dir+"/Record Node 104/experiment1.nwb"
+        self.recording_file = self.session_dir+"/Record Node 106/experiment1.nwb"
         if self.stream_name == 'Rhythm Data':
             data_source: str = 'acquisition/OE FPGA Acquisition Board-100.Rhythm Data'
         self.recording = se.read_nwb(file_path=self.recording_file, electrical_series_path=data_source)

@@ -275,6 +275,9 @@ classdef goldLabDataSession
 
                     % Use the found data and object
                     newObj.matlabFormat = obj.matlabFormat;
+                    newObj.convertedFilename = obj.convertedFilename; % I don't care if it was made on a different computer...
+                    newObj.rawFilename = obj.rawFilename;
+                    data.header.filename = obj.rawFilename;
                     obj = newObj;
 
                     % Give feedback

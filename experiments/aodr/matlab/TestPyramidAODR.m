@@ -26,6 +26,7 @@ disp('Plotting AODR behavior figures.')
 
 % For pyramid converted files
 % trial_file_path = '/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/MrM/Converted/Sorted/Pyramid/MM_2023_01_19_V-ProRec_Sorted-04.hdf5'; %fullfile(data_dir, 'aodr-test.hdf5');
+trial_file_path ='/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Converted/Behavior/Pyramid/Anubis_2024-09-16_13-41-27.hdf5';
 names = dir('/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Converted/Behavior/Pyramid/*.hdf5');
 for fnum= 1:length(names)
     trial_file_path = fullfile(names(fnum).folder, names(fnum).name);

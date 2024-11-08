@@ -50,7 +50,7 @@
 from open_ephys.analysis import Session
 
 # Edit this to be your local path to a data session.
-directory = '/Users/benjaminheasly/open-ephys/from_lowell/Anubis_T3_2024-06-21_13-30-39'
+directory = '/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Raw/Behavior/Anubis_2024-06-25_13-40-57'
 session = Session(directory)
 
 # Lower this limit if CSV size is unmanageable.
