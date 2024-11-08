@@ -1,11 +1,13 @@
 experiment:
   # Basic info suitable for inclusion in an NWB file.
   # Created 3/6/24 by LWT based on an initial version by JIG and BH
+  # This experiment file is primarily for extracting behavioral data (ecodes and eye data)
+  # No neuronal data is extracted
   experimenter:
     - Zweigle, Jean
     - Thompson, Lowell
     - Subritzky-Katz, Victoria
-  experiment_description: Adaptive ODR ("ADODR")
+  experiment_description: Adaptive ODR ("AODR")
   institution: University of Pennsylvania
   lab: The Gold Lab
   monkey: 'Anubis'
@@ -16,7 +18,7 @@ readers:
   ttl_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionNumericEventReader
     args:
-      session_dir: "Anubis_T3_2024-06-21_13-30-39"
+      session_dir: "Anubis_2024-07-17_13-03-43"
       stream_name: Rhythm Data
       result_name: ttl
     extra_buffers:
@@ -49,7 +51,7 @@ readers:
   message_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
     args:
-      session_dir: "Anubis_T3_2024-06-21_13-30-39"
+      session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: messages
     extra_buffers:
       # Replace read messages with alternate versions that we parse in ./python/udp_events.py
@@ -69,22 +71,44 @@ readers:
       timestamps: timestamp
       keys: float(value.split("key=")[-1])
       pairing_strategy: closest
-      sync_snap_threshold: 0.001
-  gaze_reader:
+      sync_snap_threshold: 0.002 # Rex machine times have ~1 ms precision
+  gaze_x_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
     args:
-      session_dir: "Anubis_T3_2024-06-21_13-30-39"
-      result_name: gaze
+      session_dir: "Anubis_2024-07-17_13-03-43"
+      result_name: gaze_x
       stream_name: PXIe-6363
-      channel_names: ["CH1", "CH2"]
+      channel_names: ["CH1"]
     extra_buffers:
       # Scale up the gaze signals by a known gain.
-      gaze:
-        reader_result_name: gaze
+      gaze_x:
+        reader_result_name: gaze_x
         transformers:
           - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
             args:
               gain: 10.2
+  gaze_y_reader:
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
+    args:
+      session_dir: "Anubis_2024-07-17_13-03-43"
+      result_name: gaze_y
+      stream_name: PXIe-6363
+      channel_names: ["CH2"]
+    extra_buffers:
+      # Scale up the gaze signals by a known gain.
+      gaze_y:
+        reader_result_name: gaze_y
+        transformers:
+          - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
+            args:
+              gain: 10.2
+  pupil_reader:
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
+    args:
+      session_dir: "Anubis_2024-07-17_13-03-43"
+      result_name: pupil
+      stream_name: PXIe-6363
+      channel_names: ["CH3"]
 trials:
   # Start trials when TTL line 1 goes high.
   start_buffer: ttl_1
@@ -105,31 +129,36 @@ trials:
         rules_csv: [ecodes/default_ecode_rules.csv, ecodes/AODR_ecode_rules.csv]
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
-        buffer_name: gaze
+        buffer_name: gaze_x
         channel_id: CH1
         filter_type: gaussian
         gaussian_std: 5
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
-        buffer_name: gaze
+        buffer_name: gaze_y
         channel_id: CH2
         filter_type: gaussian
         gaussian_std: 5
-    - class: pyramid.trials.standard_enhancers.SaccadesEnhancer
+    - class: AODR_custom_enhancers.SaccadesEnhancer
+      when: "True"
       args:
-        x_buffer_name: gaze
+        x_buffer_name: gaze_x
         x_channel_id: CH1
-        y_buffer_name: gaze
+        y_buffer_name: gaze_y
         y_channel_id: CH2
         fp_off_name: "fp_off"
         all_off_name: "all_off"
-        min_length_deg: 3
-        velocity_threshold_deg_per_s: 250 #300
-        acceleration_threshold_deg_per_s2: 6
+        max_saccades: 2                           # number of saccades to look for (helps avoid false positives)
+        min_length_deg: 0.2                         # minimum distance of a sacccade (deg)
+        velocity_threshold_deg_per_ms: 0.03            # minimum inst velocity of a saccade (deg/ms)
+        velocity_peak_threshold_deg_per_ms: 0.08            # minimum peak velocity of a saccade (deg/ms)
+        velocity_smoothing_kernel_size_ms: 0        # don't smooth in initial FIRA code. Default is 10
+        acceleration_threshold_deg_per_ms2: 0.004        # minimum instantaneous acceleration of a saccade (deg/ms^2)
+        acceleration_smoothing_kernel_size_ms: 0        # smoothing performed manually in custom enhancer
     - class: AODR_custom_enhancers.CustomEnhancer
-      package_path: python
+      package_path: .
       args:
-        min_angular_distance_to_target_deg: 30
+        min_angular_distance_to_target_deg: 25
 plotters:
     # Plot basic info about conversion process, plus a "Quit" button.
   - class: pyramid.plotters.standard_plotters.BasicInfoPlotter

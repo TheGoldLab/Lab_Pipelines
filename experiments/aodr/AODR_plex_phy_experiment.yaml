@@ -1,0 +1,125 @@
+experiment:
+  # Basic info suitable for inclusion in an NWB file.
+  experimenter:
+    - Zweigle, Jean
+    - Thompson, Lowell
+    - Subritzky-Katz, Victoria
+  experiment_description: Adaptive ODR ("AODR")
+  institution: University of Pennsylvania
+  lab: The Gold Lab
+  keywords:
+    - dlPFC
+readers:
+  # How to get data, from where, and how to get it into buffers that trials can pick from.
+  plexon_reader:
+    class: pyramid.neutral_zone.readers.plexon.PlexonPlxReader
+    args:
+      # Override plx_file on cli with: --readers plexon_reader.plx_file=my_real_file.plx
+      plx_file: my_file.plx
+      spikes: {}
+      events:
+        Strobed: ecodes
+      signals:
+        X50: gaze_x   # sometimes Xpil
+        Y51: gaze_y  # sometimes Ypil
+        Xpil: gaze_x
+        Ypil: gaze_y
+        Pupil: pupil
+    # For gui demo, wait between trial delimiting events.
+    simulate_delay: False
+    extra_buffers:
+      # Use ecodes as the delimiter for trials in time.
+      delimiter:
+        reader_result_name: ecodes
+      # Scale up the gaze signals by a known gain.
+      gaze_x:
+        reader_result_name: gaze_x
+        transformers:
+          - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
+            args:
+              gain: 10.2
+      gaze_y:
+        reader_result_name: gaze_y
+        transformers:
+          - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
+            args:
+              gain: 10.2
+  phy_reader:
+    class: pyramid.neutral_zone.readers.phy.PhyClusterEventReader
+    args:
+      # Override params_file on cli with: --readers phy_reader.params_file=my_real_params.py
+      params_file: phy/params.py
+      result_name: phy_clusters  
+trials:
+  start_buffer: delimiter
+  start_value: 1005
+  wrt_buffer: delimiter
+  wrt_value: 1010
+  enhancers:
+      # Standard enchancers come along with the Pyramid code.
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_x
+        channel_id: 49
+        filter_type: gaussian
+        gaussian_std: 5
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_y
+        channel_id: 50
+        filter_type: gaussian
+        gaussian_std: 5
+    - class: pyramid.trials.standard_enhancers.PairedCodesEnhancer
+      args:
+        buffer_name: ecodes
+        rules_csv: [default_ecode_rules.csv, AODR_ecode_rules.csv]
+    - class: pyramid.trials.standard_enhancers.EventTimesEnhancer
+      args:
+        buffer_name: ecodes
+        rules_csv: [default_ecode_rules.csv, AODR_ecode_rules.csv]
+    - class: pyramid.trials.standard_enhancers.ExpressionEnhancer
+      args:
+        expression: task_id > 0
+        value_name: actual_task
+      # Custom enchancers can be located in any specified "package path", eg the current folder.
+    - class: AODR_custom_enhancers.SaccadesEnhancer
+      when: actual_task and len(fp_off) > 0
+      args:
+        x_buffer_name: gaze_x
+        x_channel_id: 49
+        y_buffer_name: gaze_y
+        y_channel_id: 50
+        fp_off_name: "fp_off"
+        all_off_name: "all_off"
+        max_saccades: 2                           # number of saccades to look for (helps avoid false positives)
+        min_length_deg: 0.2                         # minimum distance of a sacccade (deg)
+        velocity_threshold_deg_per_ms: 0.03            # minimum inst velocity of a saccade (deg/ms)
+        velocity_peak_threshold_deg_per_ms: 0.08            # minimum peak velocity of a saccade (deg/ms)
+        velocity_smoothing_kernel_size_ms: 0        # don't smooth in initial FIRA code. Default is 10
+        acceleration_threshold_deg_per_ms2: 0.004        # minimum instantaneous acceleration of a saccade (deg/ms^2)
+        acceleration_smoothing_kernel_size_ms: 0        # smoothing performed manually in custom enhancer
+    - class: AODR_custom_enhancers.CustomEnhancer
+      package_path: .
+      when: actual_task
+      args:
+        min_angular_distance_to_target_deg: 25
+plotters:
+  # Plot saccades.
+  - class: pyramid.plotters.standard_plotters.EnhancementXYPlotter
+    args:
+      xmin: -20
+      xmax: 20
+      ymin: -15
+      ymax: 15
+      # These XY pairs are plotted as separate points.
+      xy_points:
+        fp_x: fp_y
+        t1_x: t1_y
+        t2_x: t2_y
+        sample_x: sample_y
+      # These XY pairs are grouped together and plotted as lines.
+      xy_groups:
+        saccades:
+          x_start: y_start
+          x_end: y_end
+
