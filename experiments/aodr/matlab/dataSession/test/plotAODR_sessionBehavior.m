@@ -56,7 +56,7 @@ pdat  = nans(numCues, 3, numHazards, 3);
 Lc1   = data.ids.choice==1;
 Lc2   = data.ids.choice==2;
 Ltask = data.ids.task_id>=2;
-Lgood = Ltask & data.ids.score>=0;
+Lgood = Ltask & data.ids.score>=0 & ~isnan(data.times.sample_on) & ~isnan(data.times.sac_on);
 if ~any(Lgood)
     if ~isempty(options.axs) && options.axs(1) ~= -1
         axes(options.axs(1));
