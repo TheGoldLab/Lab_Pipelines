@@ -3,3 +3,5 @@ time,3115,ring_on,,,,,
 time,4930,sample_on,,,,,792 uses these three
 time,4931,targ1_off,,,,,"792 uses these three, code dropped when MSAC target turns off"
 time,4932,choices_on,,,,,792 uses these three
+time,3007,fix_chg,,,,,792 MrM uses this
+time,4913,fix_acq,,,,,
