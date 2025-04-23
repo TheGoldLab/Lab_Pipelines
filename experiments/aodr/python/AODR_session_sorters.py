@@ -16,7 +16,7 @@ import spikeinterface.sortingcomponents as sc
 import spikeinterface.widgets as sw
 from probeinterface import generate_tetrode, ProbeGroup, Probe, generate_linear_probe
 from probeinterface.plotting import plot_probe
-import random, string, os
+import random, string, os, io
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
@@ -88,11 +88,14 @@ class OpenEphysSessionSorter():
     
     def read_data(self):
         self.logger = logging.getLogger(__name__)
-        self.recording_file = self.session_dir+"/Record Node 104/experiment1.nwb"
+        #self.recording_file = self.session_dir+"/Record Node 104/experiment1.nwb"
+        self.recording_file = self.session_dir
         if self.stream_name == 'Rhythm Data':
-            data_source: str = 'acquisition/OE FPGA Acquisition Board-100.Rhythm Data'
-        self.recording = se.read_nwb(file_path=self.recording_file, electrical_series_path=data_source)
-
+            #data_source: str = 'acquisition/OE FPGA Acquisition Board-100.Rhythm Data'
+            data_source: str = 'acquisition/extracellular array recording'
+        #self.recording = se.read_nwb(file_path=self.recording_file, electrical_series_path=data_source)
+        self.recording = se.read_nwb_recording(file_path=self.recording_file)
+        
     def set_tetrode(self):
         probegroup = ProbeGroup()
         tetrode = generate_tetrode()
@@ -186,6 +189,82 @@ class OpenEphysSessionSorter():
         sorting_analyzer.compute("quality_metrics", metric_names=["snr", "firing_rate"])
         sorting_analyzer.compute("spike_amplitudes", **job_kwargs)
 
+    def run_kilosort4_and_analyzer(self):
+
+        # Try running same settings as single_ch_sorter_and_analyzer
+        job_kwargs = dict(n_jobs=-1, progress_bar=True)
+        si.set_global_job_kwargs(**job_kwargs)
+        params = si.get_default_sorter_params('kilosort4')
+        self.sorting = si.run_sorter('kilosort4', self.recording,
+                                            folder=self.out_folder+"/"+self.sorter_name, 
+                                            verbose=True, docker_image=True, **params)
+        self.sorting_analyzer = si.create_sorting_analyzer(self.sorting, self.recording,
+                                                    format="binary_folder", folder=self.out_folder+"/analyzer", 
+                                                    overwrite=True,
+                                                    **job_kwargs)
+    
+    def run_kilosort4_demo(self):
+
+        # 1. Load nwb data
+        # out_folder is the path where the data will be copied to, and where Kilosort 4
+        # results will be saved.
+
+        # self.recording contains loaded existing data
+
+        # 2. Create a new binary file and copy the data to it 60,000 samples at a time.
+        # Depending on your system’s memory, you could increase or decrease the number of samples
+        # loaded on each iteration. This will also export the associated probe information as a
+        # ‘.prb’ file, if present.
+        
+        # Note: Data will be saved as np.int16 by default since that is the standard
+        #       for ephys data. If you need a different data type for whatever reason
+        #       such as `np.uint16`, be sure to update this.
+        from kilosort import io, run_kilosort
+        dtype = np.int16
+        filename, N, c, s, fs, probe_path = io.spikeinterface_to_binary(
+             self.recording, self.out_folder, data_name='data.bin', dtype=dtype,
+             chunksize=60000, export_probe=True, probe_name='probe.prb'
+            )
+        
+        # If no probe information was loaded through spikeinterface, you will need to specify
+        # the probe yourself, either as a .prb file or as a .json with Kilosort4’s expected
+        # format.
+
+        # At this point, it’s a good idea to open the Kilosort gui and check that the data
+        # and probe appear to have been loaded correctly and no settings need to be tweaked.
+        # You will need to input the path to the binary datafile, the folder where results
+        # should be saved, and select a probe file.
+
+        # From there, you can either launch Kilosort using the GUI or run the next notebook
+        # cell to run it through the API.
+
+        # 3. Run Kilosort (API)
+
+        # NOTE: 'n_chan_bin' is a required setting, and should reflect the total number
+        #       of channels in the binary file, while probe['n_chans'] should reflect
+        #       the number of channels that contain ephys data. In many cases these will
+        #       be the same, but not always. For example, neuropixels data often contains
+        #       385 channels, where 384 channels are for ephys traces and 1 channel is
+        #       for some other variable. In that case, you would specify
+        #       'n_chan_bin': 385.
+        settings = {'fs': fs, 'n_chan_bin': c}
+
+        # Specify probe configuration.
+        # assert probe_path is not None, 'No probe information exported by SpikeInterface'
+        probe = io.load_probe(probe_path)
+
+        # This command will both run the spike-sorting analysis and save the results to
+        # out_folder.
+        ops, st, clu, tF, Wall, similar_templates, is_ref, \
+            est_contam_rate, kept_spikes = run_kilosort(
+                settings=settings, probe=probe, filename=filename, data_dtype=dtype
+               )
+        
+        # Whether you used the gui or the API, the results can now be browsed in Phy from a
+        # terminal with:
+        # phy template-gui <DATA_DIRECTORY>/kilosort4/params.py
+        # (replacing DATA_DIRECTORY with the appropriate path)
+
     def open_sigui(self):
         analyzer = si.load_sorting_analyzer(self.out_folder+"/analyzer")
         app = spikeinterface_gui.mkQApp()
@@ -197,11 +276,6 @@ class OpenEphysSessionSorter():
         analyzer = si.load_sorting_analyzer(self.out_folder+"/analyzer")
         si.export_to_phy(analyzer, output_folder=self.out_folder+"/phy", verbose=False)
 
-    def open_phy():
+    def open_phy(self):
         os.system("phy template-gui ./phy_example/params.py")
-
-
-
-
-
-
+        #os.system("phy template-gui ./kilosort4/params.py")

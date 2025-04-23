@@ -23,6 +23,8 @@ readers:
         Y51: gaze_y  # sometimes Ypil
         Xpil: gaze_x
         Ypil: gaze_y
+        X: gaze_x
+        Y: gaze_y
         Pupil: pupil
     # For gui demo, wait between trial delimiting events.
     simulate_delay: False
