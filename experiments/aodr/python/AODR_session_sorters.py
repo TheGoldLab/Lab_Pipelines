@@ -198,11 +198,14 @@ class OpenEphysSessionSorter():
         self.sorting = si.run_sorter('kilosort4', self.recording,
                                             folder=self.out_folder+"/"+self.sorter_name, 
                                             verbose=True, docker_image=True, **params)
+        '''
+        Kilosort4 shouldn't need a sorting analyzer.
         self.sorting_analyzer = si.create_sorting_analyzer(self.sorting, self.recording,
                                                     format="binary_folder", folder=self.out_folder+"/analyzer", 
                                                     overwrite=True,
                                                     **job_kwargs)
-    
+        '''
+                                                    
     def run_kilosort4_demo(self):
 
         # 1. Load nwb data
@@ -266,16 +269,16 @@ class OpenEphysSessionSorter():
         # (replacing DATA_DIRECTORY with the appropriate path)
 
     def open_sigui(self):
-        analyzer = si.load_sorting_analyzer(self.out_folder+"/analyzer")
+        analyzer = si.load_sorting_analyzer(self.out_folder+"analyzer")
         app = spikeinterface_gui.mkQApp()
         win = spikeinterface_gui.MainWindow(analyzer)
         win.show()
         app.exec_()
 
     def export_to_phy(self):
-        analyzer = si.load_sorting_analyzer(self.out_folder+"/analyzer")
-        si.export_to_phy(analyzer, output_folder=self.out_folder+"/phy", verbose=False)
+        analyzer = si.load_sorting_analyzer(self.out_folder+"analyzer")
+        si.export_to_phy(analyzer, output_folder=self.out_folder+"phy", verbose=False)
 
     def open_phy(self):
-        os.system("phy template-gui ./phy_example/params.py")
-        #os.system("phy template-gui ./kilosort4/params.py")
+        #os.system("phy template-gui ./phy_example/params.py")
+        os.system("phy template-gui "+self.out_folder+self.sorter_name+"/sorter_output/params.py")
