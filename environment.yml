@@ -35,8 +35,7 @@ dependencies:
     - MEArec
     - spikeinterface[full,widgets]
     - spikeinterface-gui
-    - tridesclous
-    - mountainsort5
+    - Kilosort[gui]==4.0.31
     - open-ephys-python-tools==0.1.8
     - git+https://github.com/cortex-lab/phy.git
-#    - git+https://github.com/benjamin-heasly/pyramid
+    - git+https://github.com/benjamin-heasly/pyramid
