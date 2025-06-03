@@ -8,15 +8,15 @@ import pandas as pd
 import os
 
 # Directory where the sorted plexon data files are stored
-dataSearchPath = "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Raw/Behavior/"
+dataSearchPath = "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/MrM/Neuropixel/Raw/BehaviorOnly/"
 # Where the rules for ecodes are stored
 pyramidSearchPath = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/aodr/ecodes/"
 # Conversion specifications
 convertSpecs = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/aodr/AODR_experiment.yaml"
 # Base directory to save the output files from pyramid (hdf5 files)
-baseSaveDir = "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Converted/Behavior/Pyramid/"
+baseSaveDir = "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/MrM/Neuropixel/Converted/Pyramid/BehaviorOnly/"
 
-currentFile = "Anubis_2024-12-13_11-38-46"
+currentFile = "MrM_2025-06-02_11-19-42"
 outputFname = baseSaveDir+currentFile+".hdf5"
 cli.main(["convert", 
         "--trial-file", outputFname, 
