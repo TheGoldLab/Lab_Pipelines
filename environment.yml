@@ -9,10 +9,10 @@ dependencies:
   - python-graphviz=0.20.1
   - matplotlib
   - numpy
+  - zarr
   - joblib
   - tqdm
   - xarray
-  - zarr
   - scikit-learn
   - hdbscan
   - networkx
@@ -20,7 +20,6 @@ dependencies:
   - loky
   - numba
   - jupyter
-  - pyqt=5
   - pyqtgraph
   - ipywidgets
   - ipympl
@@ -30,11 +29,13 @@ dependencies:
     - docker==6.1.3
     - pandas==2.1.1
     - scipy==1.11.4
+    - pyqt5
+    - pyqtwebengine
     - ephyviewer
     - MEArec
     - spikeinterface[full,widgets]
     - spikeinterface-gui
-    - tridesclous
-    - mountainsort5
+    - Kilosort[gui]==4.0.31
     - open-ephys-python-tools==0.1.8
+    - git+https://github.com/cortex-lab/phy.git
     - git+https://github.com/benjamin-heasly/pyramid

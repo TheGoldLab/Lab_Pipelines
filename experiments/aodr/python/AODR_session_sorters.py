@@ -2,9 +2,11 @@ from __future__ import annotations
 from pathlib import Path
 import platform
 import shutil
-import argparse
 import spikeinterface.full as si
-import spikeinterface_gui
+import kilosort
+from kilosort import io, run_kilosort
+from kilosort.gui.launch import launcher as launch_gui
+#import spikeinterface_gui
 import spikeinterface.extractors as se
 import spikeinterface.preprocessing as spre
 import spikeinterface.sorters as ss
@@ -15,11 +17,13 @@ import spikeinterface.curation as scur
 import spikeinterface.sortingcomponents as sc
 import spikeinterface.widgets as sw
 from probeinterface import generate_tetrode, ProbeGroup, Probe, generate_linear_probe
-from probeinterface.plotting import plot_probe
-import random, string, os
+from probeinterface import write_probeinterface
+from probeinterface.plotting import plot_probe, plot_probe_group
+import subprocess, random, string, os
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
+from phy.apps.template import template_gui
 
 
 class OpenEphysSessionSorter():
@@ -43,7 +47,7 @@ class OpenEphysSessionSorter():
     def __init__(
         self,
         session_dir: str = None,
-        stream_name: str = 'Rhythm Data',
+        stream_name: list[str] = ['Rhythm Data'],
         channel_names: list[int] = None,
         step_names: list[str] = None,
         result_name: str = None,
@@ -61,16 +65,7 @@ class OpenEphysSessionSorter():
         self.out_folder = out_folder
         self.freq_min = freq_min
         self.freq_max = freq_max
-        '''
-        for step in self.step_names:
-            try:
-                func = self.__getattribute__(step)
-                func()
-                done = '...OK'
-            except Exception as err:
-                done = f'...Fail, Error: {err}'
-            print(step, done)
-        '''
+
         for step in self.step_names:
             func = self.__getattribute__(step)
             func()
@@ -88,17 +83,28 @@ class OpenEphysSessionSorter():
     
     def read_data(self):
         self.logger = logging.getLogger(__name__)
-        node = os.listdir(self.session_dir)[1]
-        self.recording_file = self.session_dir+"/"+node+"/experiment1.nwb"
+        #self.recording_file = self.session_dir+"/Record Node 104/experiment1.nwb"
+        
         if self.stream_name == 'Rhythm Data':
-            data_source: str = 'acquisition/OE FPGA Acquisition Board-100.Rhythm Data'
-        self.recording = se.read_nwb(file_path=self.recording_file, electrical_series_path=data_source)
+            # For Open Ephys Intan Headstages
+            self.recording_file = self.session_dir
+            data_source: str = 'acquisition/OE Rhythm Data'
+            self.recording = se.read_nwb_recording(file_path=self.recording_file, electrical_series_path=data_source)
+        elif self.stream_name == 'spikeglx':
+            # Loads directory and automatically loads probe information.
+            data_source: str = 'imec0.ap'
+            self.recording_file = self.session_dir+data_source+'.bin' # NOT CORRECT
+            self.recording = se.read_spikeglx(self.session_dir, stream_name=data_source, load_sync_channel=False)
+            np_probe = self.recording.get_probe()
+            write_probeinterface(probe_or_probegroup=np_probe, file=self.out_folder+'neuropixel_probe.json')
 
+        
     def set_tetrode(self):
         probegroup = ProbeGroup()
         tetrode = generate_tetrode()
         tetrode.set_device_channel_indices(self.channel_names)
         probegroup.add_probe(tetrode)
+        #probegroup.set_global_device_channel_indices(self.channel_names)
         # set this to the recording
         self.recording = self.recording.set_probegroup(probegroup, group_mode='by_probe')
 
@@ -148,61 +154,71 @@ class OpenEphysSessionSorter():
         self.sorting_analyzer.compute("quality_metrics", metric_names=["snr", "firing_rate"])
         self.sorting_analyzer.compute("spike_amplitudes", **job_kwargs)
 
-    def run_one_sorter_and_analyzer(self):
-        # I believe a custom compute json-like file could also be used.
-        job_kwargs = dict(n_jobs=1, progress_bar=True)
+    def run_kilosort4(self):
+        # Does not use the gui, but instead runs kilosort4 directly from the API using default parameters.
+        job_kwargs = dict(n_jobs=-1, progress_bar=True)
         si.set_global_job_kwargs(**job_kwargs)
-        params = si.get_default_sorter_params(self.sorter_name)
-        if self.sorter_name == 'tridesclous2':
-            params['apply_preprocessing'] = False           # do not filter and whiten data. spykingcircus always whitens
-            params['matching']['method'] = 'circus-omp-svd'
-            params['detection']['detect_threshold'] = 6
-            params['templates']['ms_before'] = 1
-            params['templates']['ms_after'] = 3
-            params['clustering']['method'] = 'FeaturesClustering'
-            params['clustering']['threshold_diff'] = 0.0001
-            params['selection']['min_n_peaks'] = 50000
-            params['clustering']['split_radius_um'] = 0
-            params['clustering']['merge_radius_um'] = 0
-        elif self.sorter_name == 'spykingcircus2':
-            params['apply_preprocessing'] = False
-            params['selection']['select_per_channel'] = True
-
-        sorting = si.run_sorter(self.sorter_name, self.recording,
+        params = si.get_default_sorter_params('kilosort4')
+        self.sorting = si.run_sorter_by_property('kilosort4', self.recording,
+                                            grouping_property='group',     
                                             folder=self.out_folder+"/"+self.sorter_name, 
-                                            verbose=True, remove_existing_folder=True, **params)
-        sorting_analyzer = si.create_sorting_analyzer(sorting, self.recording,
-                                                    format="binary_folder", folder=self.out_folder+"/analyzer", 
-                                                    overwrite=True,
-                                                    **job_kwargs)
-        sorting_analyzer.compute("random_spikes", method="uniform", max_spikes_per_unit=500)
-        sorting_analyzer.compute("waveforms", **job_kwargs)
-        sorting_analyzer.compute("templates")
-        sorting_analyzer.compute("template_similarity")
-        sorting_analyzer.compute("noise_levels")
-        sorting_analyzer.compute("unit_locations", method="monopolar_triangulation")
-        sorting_analyzer.compute("correlograms", window_ms=100, bin_ms=5.)
-        sorting_analyzer.compute("isi_histograms")
-        sorting_analyzer.compute("principal_components", n_components=3, mode='by_channel_global', whiten=True, **job_kwargs)
-        sorting_analyzer.compute("quality_metrics", metric_names=["snr", "firing_rate"])
-        sorting_analyzer.compute("spike_amplitudes", **job_kwargs)
+                                            verbose=True, docker_image=False, **params)
+                                                    
+    def run_kilosort4_gui(self):
+        # Create a new binary file and copy the data to it 60,000 samples at a time.
+        # Depending on your system’s memory, you could increase or decrease the number of samples
+        # loaded on each iteration. This will also export the associated probe information as a
+        # ‘.prb’ file, if present.
+        
+        # Note: Data will be saved as np.int16 by default since that is the standard
+        #       for ephys data. If you need a different data type for whatever reason
+        #       such as `np.uint16`, be sure to update this.
+        
+        # If no probe information was loaded through spikeinterface, you will need to specify
+        # the probe yourself, either as a .prb file or as a .json with Kilosort4’s expected
+        # format.
+        if self.stream_name == 'spikeglx':
+            files = os.listdir(self.session_dir)
+            ap_file = next((f for f in files if 'ap.bin' in f), None) # Assumes we want the ap file and there is only one
+            filename = self.session_dir + ap_file
+        else:
+            dtype = np.int16
+            filename, N, c, s, fs, probe_path = io.spikeinterface_to_binary(
+                self.recording, self.out_folder, data_name=self.sorter_name+'.bin', dtype=dtype,
+                chunksize=60000, export_probe=True, probe_name=self.sorter_name+'_probe.prb'
+                )
+        
+        # At this point, it’s a good idea to open the Kilosort gui and check that the data
+        # and probe appear to have been loaded correctly and no settings need to be tweaked.
+        # You will need to input the path to the binary datafile, the folder where results
+        # should be saved, and select a probe file.
+
+        # Run Kilosort4 GUI
+        try:
+        # Attempt to launch the Kilosort GUI
+            launch_gui(filename=filename, reset=False, skip_load=False)
+        except SystemExit as e:
+        # Check if the error is the specific 'NoneType' issue
+            if e.code==0:
+                print("Caught and ignored the Kilosort closing error...")
+            else:
+            # Re-raise the exception if it's not the expected one
+                raise
+        
 
     def open_sigui(self):
-        analyzer = si.load_sorting_analyzer(self.out_folder+"/analyzer")
+        analyzer = si.load_sorting_analyzer(self.out_folder+"analyzer")
         app = spikeinterface_gui.mkQApp()
         win = spikeinterface_gui.MainWindow(analyzer)
         win.show()
         app.exec_()
 
     def export_to_phy(self):
-        analyzer = si.load_sorting_analyzer(self.out_folder+"/analyzer")
-        si.export_to_phy(analyzer, output_folder=self.out_folder+"/phy", verbose=False)
+        analyzer = si.load_sorting_analyzer(self.out_folder+"analyzer")
+        si.export_to_phy(analyzer, output_folder=self.out_folder+"phy", verbose=False)
 
-    def open_phy():
-        os.system("phy template-gui ./phy_example/params.py")
-
-
-
-
-
-
+    def open_phy(self,alt_path=None):
+        if alt_path is None:
+            template_gui(self.out_folder+self.sorter_name+"/params.py")
+        else:
+            template_gui(alt_path+"params.py")
