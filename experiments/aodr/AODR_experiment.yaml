@@ -10,7 +10,7 @@ experiment:
   experiment_description: Adaptive ODR ("AODR")
   institution: University of Pennsylvania
   lab: The Gold Lab
-  monkey: 'Anubis'
+  monkey: 'Mr Miyagi'
   keywords:
     - dlPFC
 readers:

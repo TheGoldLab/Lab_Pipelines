@@ -48,7 +48,8 @@ dataInFIRAFormat = struct( ...
     'zero', {{}}, ...
     'error', {{}}, ...
     'data', []), ...
-    'dio', {{}});
+    'dio', struct(...
+    'line_num',[],'timestamp',[],'state',[]));
 
 % Return if no data given
 if numTrials < 1
@@ -356,4 +357,22 @@ for tt = 1:numTrials
 
     % Update the row counter
     channelRowStart = size(dataInFIRAFormat.spikes.data, 2);
+end
+
+%% Add dio or ttl data
+% % Get ttl/dio signals from numeric events
+% In Open Ephys GUI 0.6.7 pyramid saves these as [timestamp, line_number, line_state, processor_id]
+numeric = dataInTrialFileFormat(tt+1).numeric_events;
+numericNames = {};
+if ~isempty(numeric)
+    numericNames = fieldnames(numeric);
+end
+%
+% % But only the numeric event lists that are ttl.
+if ismember('ttl',numericNames)
+    for tt = 1:numTrials
+        dataInFIRAFormat.dio(tt).timestamp = dataInTrialFileFormat(tt+1).numeric_events.ttl(:,1);
+        dataInFIRAFormat.dio(tt).line_num = dataInTrialFileFormat(tt+1).numeric_events.ttl(:,2);
+        dataInFIRAFormat.dio(tt).state = dataInTrialFileFormat(tt+1).numeric_events.ttl(:,3);
+    end
 end

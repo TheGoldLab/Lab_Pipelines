@@ -108,3 +108,11 @@ if ~isempty(options.signalChannels) && isfield(dataInFIRAFormat, 'analog')
         end
     end
 end
+
+%% Conditionally add dio (ttl) data
+if isfield(dataInFIRAFormat, 'dio')
+    if size(dataInFIRAFormat.dio,2)>1 % Struct array
+        trialIndices = find(options.trialSelectionArray);
+        dataInSessionDataFormat.dio = dataInFIRAFormat.dio(trialIndices);
+    end
+end

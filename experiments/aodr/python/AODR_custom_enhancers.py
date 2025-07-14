@@ -94,16 +94,10 @@ class CustomEnhancer(TrialEnhancer):
 
             # 0-8 for T1/T2, used below
             llr_id = int(trial_id) % 9
-            if experiment_info.get("monkey") == "Cicero":
-                if task_id == 2:
-                    # ORDER: P1 (farthest from correct target) -> P9 (closest to correct target)
-                    ps = [0.0, 0.05, 0.10, 0.10, 0.15, 0.15, 0.20, 0.15, 0.10]
-                else:
-                    ps = [0.0, 0.05, 0.10, 0.10, 0.15, 0.15, 0.20, 0.15, 0.10]
-            elif experiment_info.get("monkey") == "Anubis":
+            if experiment_info.get("monkey") == "Mr Miyagi":
                 ps = [0.0, 0.0, 0.0, 0.10, 0.20, 0.30, 0.15, 0.15, 0.10]
-            else:  # "MrM"
-                ps = [0.0, 0.0, 0.0, 0.10, 0.15, 0.30, 0.15, 0.15, 0.15]
+            else:  # Currently identical for other monkeys...
+                ps = [0.0, 0.0, 0.0, 0.10, 0.20, 0.30, 0.15, 0.15, 0.10]
 
             # Compute LLR, - favors T1, + favors T2
             if trial_id < 9: # T1 is correct

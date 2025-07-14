@@ -16,7 +16,7 @@ convertSpecs = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/aodr/AO
 # Base directory to save the output files from pyramid (hdf5 files)
 baseSaveDir = "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/MrM/Neuropixel/Converted/Pyramid/BehaviorOnly/"
 
-currentFile = "MrM_2025-06-02_11-19-42"
+currentFile = "MrM_2025-07-11_11-26-40"
 outputFname = baseSaveDir+currentFile+".hdf5"
 cli.main(["convert", 
         "--trial-file", outputFname, 
