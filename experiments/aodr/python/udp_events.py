@@ -32,6 +32,8 @@ class UDPEventParser(Transformer):
     ) -> None:
         self.timestamp_delimiter = timestamp_delimiter
         self.sample_number_delimiter = sample_number_delimiter
+        self.first_timestamp_rec = None
+        self.first_timestamp_offset = None
         return None
 
     def parse_events(self, events: TextEventList) -> TextEventList:
@@ -53,7 +55,16 @@ class UDPEventParser(Transformer):
                 # to make it easier to pair up sync events from different readers.
                 # Choose a format with key=value pairs separated by pipes |
                 # This just makes it easier for downstram code to read sync events along with other events from Rex.
-                text_data.append(f"name=sync|value={raw_text}|key={raw_timestamp}")
+                if raw_timestamp<0:
+                    logging.info(f"Raw timestamp is negative: {raw_timestamp}. Using message client timestamp instead: {messge_timestamp}")
+                    if self.first_timestamp_rec is None:
+                        self.first_timestamp_rec = True
+                        self.first_timestamp_offset = float(messge_timestamp) # offset based on the first client timestamp for simplicity
+
+                    messge_timestamp = str(float(messge_timestamp) - self.first_timestamp_offset)
+                    text_data.append(f"name=sync|value={raw_text}|key={messge_timestamp}")
+                else:
+                    text_data.append(f"name=sync|value={raw_text}|key={raw_timestamp}")
             else:
                 text_data.append(message)
 

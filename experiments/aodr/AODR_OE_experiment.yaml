@@ -21,17 +21,18 @@ readers:
       session_dir: "Anubis_2024-07-17_13-03-43"
       stream_name: acquisition_board
       result_name: ttl
+    # Use this signal source to create new signal sources. In this case, we create buffers for the signal source that filter the TTL events to just line number 1 (trial start) and line number 2 (fp on).
     extra_buffers:
-      # A buffer that filters TTL events to just line number 1 (trial start)
-      ttl_1:
-        reader_result_name: ttl
-        transformers:
+      # A buffer that filters TTL events to just line number 1 (trial start for AODR)
+      ttl_1: # The new buffer name
+        reader_result_name: ttl # the source result name
+        transformers: # The values (int) to filter for
           - class: pyramid.neutral_zone.transformers.standard_transformers.FilterRange
             args:
               value_index: 0
               min: 1
               max: 2
-      # A buffer that filters TTL events to just line number 2 (fp on).
+      # A buffer that filters TTL events to just line number 2 (fp on for AODR).
       ttl_2:
         reader_result_name: ttl
         transformers:
@@ -40,15 +41,18 @@ readers:
               value_index: 0
               min: 2
               max: 3
+    # In Open Ephys, we use a specific TTL line to synchronize the UDP message stream (stim/exp info from REX) more precisely.
+    # We set up a sync source that uses the ttl_1 buffer as the reference.
     sync:
-      is_reference: True
+      is_reference: True # Is this considered the "ground truth" for synchronization?
       buffer_name: ttl_1
-      init_event_count: 10
-      init_max_reads: 1000
+      init_event_count: 10 # The number of initial events to receive to start the sync process.
+      init_max_reads: 1000 # The number of buffer reads to perform to try and reach these initial events.
       # filter, timesamps, and keys are Python expressions evaluated once per event with vars "value", "timestamp", and "count".
-      filter: value[1] == 1
+      filter: value[1] == 1 # change value[1] = X to the line number you want to sync on?
       timestamps: timestamp
       keys: timestamp
+  # Read the message stream from Open Ephys as text events - these are either manually entered messages or UDP messages from the REX machine.
   message_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTextEventReader
     args:
@@ -59,29 +63,35 @@ readers:
       messages:
           reader_result_name: messages
           transformers:
-          - class: udp_events.UDPEventParser
-            package_path: python
+          - class: udp_events.UDPEventParser # If you follow the conventions in udp_events.py, this will parse the messages into a FIRA/dataSession compatible format.
+            package_path: python # The package path to the UDPEventParser class relative to the AODR folder
             args:
-              timestamp_delimiter: "@"
-              sample_number_delimiter: "="
+              timestamp_delimiter: "@" # Based on UDP Events Plugin settings
+              sample_number_delimiter: "=" # Based on UDP Events Plugin settings
               sample_rate: 30000.0 # Sample rate of the device that is recording the sample numbers provided in the message text (check the UDPEvents Plugin: systemTime/streamSampRate)
+    # These are the UDP messages from REX that we want to sync 
+    # (they work on a separate network buffer in Open Ephys and are read in blocks with "soft" timestamps).
+    # They contain a REX hardware timestamp, a sample number, and a key that is used to sync with the TTL events.
     sync:
       buffer_name: messages
       init_event_count: 10
       init_max_reads: 1000
       # filter, timesamps, and keys are Python expressions evaluated once per event with vars "value", "timestamp", and "count".
-      filter: value.startswith("name=sync")
-      timestamps: timestamp
+      filter: value.startswith("name=sync") # Based on UDP Events Plugin settings
+      timestamps: timestamp # This is the Open Ephys timestamp recorded for the UDP message from REX
+      # Based on UDP Events Plugin settings, this is the key that is used to sync with the TTL sync events.
+      # It is a "soft" sample number for the stream (the buffer of the OE GUI associated with a signal source)
+      # based on the REX hardware timestamps and stream sample number alignment
       keys: float(value.split("key=")[-1])
-      pairing_strategy: max
-      sync_snap_threshold: 0.002 # Rex machine times have ~1 ms precision
+      pairing_strategy: closest
+      sync_snap_threshold: 0.002 # The Rex machine times have at least 1 ms precision, so as long as the UDP events GUI checks every ms, we should be able to sync information for each trial.
   gaze_x_reader:
     class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
     args:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_x
-      stream_name: PXIe-6363
-      channel_names: ["CH1"]
+      stream_name: acquisition_board
+      channel_names: ["CH5"] # This depends on the channel configuration you set in the Open Ephys GUI. The first 4 channels are continuous neural data for these files
     extra_buffers:
       # Scale up the gaze signals by a known gain.
       gaze_x:
@@ -95,8 +105,8 @@ readers:
     args:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_y
-      stream_name: PXIe-6363
-      channel_names: ["CH2"]
+      stream_name: acquisition_board
+      channel_names: ["CH6"]
     extra_buffers:
       # Scale up the gaze signals by a known gain.
       gaze_y:
@@ -110,8 +120,8 @@ readers:
     args:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: pupil
-      stream_name: PXIe-6363
-      channel_names: ["CH3"]
+      stream_name: acquisition_board
+      channel_names: ["CH7"]
 trials:
   # Start trials when TTL line 1 goes high.
   start_buffer: ttl_1
@@ -122,6 +132,7 @@ trials:
   wrt_value: 1
   wrt_value_index: 1
   enhancers:
+  # Start with the messages buffer to extract text key-value pairs based on UDP events and get the relevant message information
     - class: pyramid.trials.standard_enhancers.TextKeyValueEnhancer
       args:
         buffer_name: messages
@@ -130,25 +141,47 @@ trials:
     - class: pyramid.trials.standard_enhancers.RenameRescaleEnhancer
       args:
         rules_csv: [ecodes/default_ecode_rules.csv, ecodes/AODR_ecode_rules.csv]
+    # For simulated eye movements in EyeLink, at least, there is a lot of high-frequency noise at 30KHz using an OE analog board.
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_x
-        channel_id: CH1
+        channel_id: CH5
+        filter_type: lowpass
+        cutoff_freq: 10  # Cutoff frequency in Hz: Was not necessary for an NI-DAQ device sampling at 1000 Hz, but useful for OE analog data sampled at 30khz. I think the eyetracker is only 1000hz
+        order: 4  # Filter order
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_y
+        channel_id: CH6
+        filter_type: lowpass # Butterworth lowpass filter
+        cutoff_freq: 10  # Cutoff frequency in Hz: Was not necessary for an NI-DAQ device sampling at 1000 Hz, but useful for OE analog data sampled at 30khz. I think the eyetracker is only 1000hz
+        order: 4  # Filter order
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: pupil
+        channel_id: CH7
+        filter_type: lowpass # Butterworth lowpass filter
+        cutoff_freq: 10  # Cutoff frequency in Hz: Was not necessary for an NI-DAQ device sampling at 1000 Hz, but useful for OE analog data sampled at 30khz. I think the eyetracker is only 1000hz
+        order: 4  # Filter order
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_x
+        channel_id: CH5
         filter_type: gaussian
         gaussian_std: 5
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_y
-        channel_id: CH2
+        channel_id: CH6
         filter_type: gaussian
         gaussian_std: 5
     - class: AODR_custom_enhancers.SaccadesEnhancer
       when: "True"
       args:
         x_buffer_name: gaze_x
-        x_channel_id: CH1
+        x_channel_id: CH5
         y_buffer_name: gaze_y
-        y_channel_id: CH2
+        y_channel_id: CH6
         fp_off_name: "fp_off"
         all_off_name: "all_off"
         max_saccades: 2                           # number of saccades to look for (helps avoid false positives)

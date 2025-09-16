@@ -12,11 +12,11 @@ dataSearchPath = "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physio
 # Where the rules for ecodes are stored
 pyramidSearchPath = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/aodr/ecodes/"
 # Conversion specifications
-convertSpecs = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/aodr/AODR_experiment.yaml"
+convertSpecs = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/aodr/AODR_OE_experiment.yaml"
 # Base directory to save the output files from pyramid (hdf5 files)
 baseSaveDir = "/Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/MrM/Neuropixel/Converted/Pyramid/BehaviorOnly/"
 
-currentFile = "MrM_2025-07-11_11-26-40"
+currentFile = "MrM_2025-08-08_11-27-24"
 outputFname = baseSaveDir+currentFile+".hdf5"
 cli.main(["convert", 
         "--trial-file", outputFname, 
