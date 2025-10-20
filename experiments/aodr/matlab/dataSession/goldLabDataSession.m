@@ -113,7 +113,7 @@ classdef goldLabDataSession
         function save(obj, data)
 
             % Save the data and the object using the correct name/ext
-            save(obj.convertedFilename, 'data', 'obj');
+            save(obj.convertedFilename, 'data', 'obj', '-v7.3');
         end
 
         function obj = updateFilenames(obj, filename)

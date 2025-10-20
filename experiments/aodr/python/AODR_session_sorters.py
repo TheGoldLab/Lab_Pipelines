@@ -2,11 +2,12 @@ from __future__ import annotations
 from pathlib import Path
 import platform
 import shutil
+import json
 import spikeinterface.full as si
-import kilosort
-from kilosort import io, run_kilosort
-from kilosort.gui.launch import launcher as launch_gui
-#import spikeinterface_gui
+#import kilosort
+#from kilosort import io, run_kilosort
+#from kilosort.gui.launch import launcher as launch_gui
+import spikeinterface_gui
 import spikeinterface.extractors as se
 import spikeinterface.preprocessing as spre
 import spikeinterface.sorters as ss
@@ -14,6 +15,8 @@ import spikeinterface.postprocessing as spost
 import spikeinterface.qualitymetrics as sqm
 import spikeinterface.exporters as sexp
 import spikeinterface.curation as scur
+from spikeinterface.curation import apply_curation
+from spikeinterface.widgets import plot_sorting_summary
 import spikeinterface.sortingcomponents as sc
 import spikeinterface.widgets as sw
 from probeinterface import generate_tetrode, ProbeGroup, Probe, generate_linear_probe
@@ -23,7 +26,9 @@ import subprocess, random, string, os
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
-from phy.apps.template import template_gui
+from open_ephys.analysis import Session
+
+#from phy.apps.template import template_gui
 
 
 class OpenEphysSessionSorter():
@@ -54,7 +59,8 @@ class OpenEphysSessionSorter():
         sorter_name: str = 'spykingcircus2',
         out_folder: str = None,
         freq_min: int = 300,
-        freq_max: int = 6000
+        freq_max: int = 6000,
+        overwrite_timestamps: bool = False
     ) -> None:
         self.session_dir = session_dir
         self.stream_name = stream_name
@@ -65,6 +71,7 @@ class OpenEphysSessionSorter():
         self.out_folder = out_folder
         self.freq_min = freq_min
         self.freq_max = freq_max
+        self.overwrite_timestamps = overwrite_timestamps
 
         for step in self.step_names:
             func = self.__getattribute__(step)
@@ -85,10 +92,13 @@ class OpenEphysSessionSorter():
         self.logger = logging.getLogger(__name__)
         #self.recording_file = self.session_dir+"/Record Node 104/experiment1.nwb"
         
-        if self.stream_name == 'Rhythm Data':
+        if self.stream_name == 'Rhythm Data' or self.stream_name == 'acquisition_board':
             # For Open Ephys Intan Headstages
-            self.recording_file = self.session_dir
-            data_source: str = 'acquisition/OE Rhythm Data'
+            if not os.path.isfile(self.session_dir):
+                self.recording_file = self.session_dir + os.listdir(self.session_dir)[0] + "/experiment1.nwb"
+            else:
+                self.recording_file = self.session_dir
+            data_source: str = 'acquisition/Acquisition Board-106.acquisition_board'
             self.recording = se.read_nwb_recording(file_path=self.recording_file, electrical_series_path=data_source)
         elif self.stream_name == 'spikeglx':
             # Loads directory and automatically loads probe information.
@@ -128,9 +138,9 @@ class OpenEphysSessionSorter():
         job_kwargs = dict(n_jobs=-1, progress_bar=True)
         si.set_global_job_kwargs(**job_kwargs)
         params = si.get_default_sorter_params('mountainsort5')
-        #params['clustering']['method'] = 'FeaturesClustering'
-        #params['matching']['method'] = 'circus'
-        params['detect_threshold'] = 5.5
+        #params['detect_threshold'] = 4.75 # I usually start lower than default for first sort then move up
+        params['npca_per_channel'] = 5 # Haven't found much of a meaningful difference changing this for single electrode
+        params['scheme2_training_recording_sampling_mode'] = 'uniform' # uniform, initial
         params['filter'] = True  # For some reason,  making this false changes the detect sign. But leaving true and not using my preprocessing filter results in the data not being filtered?
         self.sorting = si.run_sorter('mountainsort5', self.recording,
                                             folder=self.out_folder+"/"+self.sorter_name, 
@@ -207,18 +217,48 @@ class OpenEphysSessionSorter():
         
 
     def open_sigui(self):
-        analyzer = si.load_sorting_analyzer(self.out_folder+"analyzer")
-        app = spikeinterface_gui.mkQApp()
-        win = spikeinterface_gui.MainWindow(analyzer)
-        win.show()
-        app.exec_()
+        plot_sorting_summary(sorting_analyzer=self.sorting_analyzer, curation=True, backend='spikeinterface_gui')
+
+        # Potentially load the curation JSON file
+        curation_json = os.path.join(self.out_folder, 'analyzer', 'spikeinterface_gui', 'curation_data.json')
+        if os.path.isfile(curation_json):
+            print("Applying curation from GUI...")
+            with open(curation_json, 'r') as f:
+                curation_dict = json.load(f)
+
+            # apply the curation to the sorting output
+            self.cured_sorting = apply_curation(self.sorting, curation_dict_or_model=curation_dict)
+
+            # apply the curation to the sorting analyzer
+            self.cured_sorting_analyzer = apply_curation(self.sorting_analyzer, curation_dict_or_model=curation_dict)
 
     def export_to_phy(self):
-        analyzer = si.load_sorting_analyzer(self.out_folder+"analyzer")
-        si.export_to_phy(analyzer, output_folder=self.out_folder+"phy", verbose=False)
+        # analyzer = si.load_sorting_analyzer(self.out_folder+"analyzer")
+        if hasattr(self, 'cured_sorting'):
+            # self.cured_sorting exists
+            print("cured_sorting is available")
+            si.export_to_phy(self.cured_sorting_analyzer, output_folder=self.out_folder+"phy", verbose=False)
+        else:
+            # self.cured_sorting does not exist
+            print("cured_sorting is not available")
+            si.export_to_phy(self.sorting_analyzer, output_folder=self.out_folder+"phy", verbose=False)
+
+        if self.overwrite_timestamps:
+            session = Session(self.session_dir)
+            # This is a big assumption regarding record nodes and indexes
+            first_sample_time = session.recordnodes[0].recordings[0].continuous[0].timestamps[0]
+            # Overwrite the params.py file to set the first time stamp for the first sample
+            with open(self.out_folder+"phy/params.py", "r") as f:
+                lines = f.readlines()
+            with open(self.out_folder+"phy/params.py", "w") as f:
+                for line in lines:
+                    if line.startswith("offset"):
+                        f.write(f"offset = {first_sample_time}\n")
+                    else:
+                        f.write(line)
 
     def open_phy(self,alt_path=None):
         if alt_path is None:
-            template_gui(self.out_folder+self.sorter_name+"/params.py")
+            template_gui(self.out_folder+"phy/params.py")
         else:
             template_gui(alt_path+"params.py")

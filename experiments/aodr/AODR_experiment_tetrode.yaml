@@ -74,7 +74,7 @@ readers:
     # They contain a REX hardware timestamp, a sample number, and a key that is used to sync with the TTL events.
     sync:
       buffer_name: messages
-      init_event_count: 50
+      init_event_count: 10
       init_max_reads: 1000000
       # filter, timesamps, and keys are Python expressions evaluated once per event with vars "value", "timestamp", and "count".
       filter: value.startswith("name=sync") # Based on UDP Events Plugin settings
@@ -91,7 +91,7 @@ readers:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_x
       stream_name: acquisition_board
-      channel_names: ["CH3"] # This depends on the channel configuration you set in the Open Ephys GUI. The first X channels are continuous neural data for these files
+      channel_names: ["CH6"] # This depends on the channel configuration you set in the Open Ephys GUI. The first X channels are continuous neural data for these files
     extra_buffers:
       # Scale up the gaze signals by a known gain.
       gaze_x:
@@ -106,7 +106,7 @@ readers:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_y
       stream_name: acquisition_board
-      channel_names: ["CH4"]
+      channel_names: ["CH7"]
     extra_buffers:
       # Scale up the gaze signals by a known gain.
       gaze_y:
@@ -121,7 +121,7 @@ readers:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: pupil
       stream_name: acquisition_board
-      channel_names: ["CH5"]
+      channel_names: ["CH8"]
   phy_reader:
     class: pyramid.neutral_zone.readers.phy.PhyClusterEventReader
     args:
@@ -151,43 +151,43 @@ trials:
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_x
-        channel_id: CH3
-        filter_type: lowpass
-        cutoff_freq: 10  # Cutoff frequency in Hz: Was not necessary for an NI-DAQ device sampling at 1000 Hz, but useful for OE analog data sampled at 30khz. I think the eyetracker is only 1000hz
-        order: 4  # Filter order
+        channel_id: CH6
+        filter_type: golay
+        window_size: 3001  
+        poly_order: 3  # Filter order
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_y
-        channel_id: CH4
-        filter_type: lowpass # Butterworth lowpass filter
-        cutoff_freq: 10  # Cutoff frequency in Hz: Was not necessary for an NI-DAQ device sampling at 1000 Hz, but useful for OE analog data sampled at 30khz. I think the eyetracker is only 1000hz
-        order: 4  # Filter order
+        channel_id: CH7
+        filter_type: golay
+        window_size: 3001  
+        poly_order: 3  # Filter order
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: pupil
-        channel_id: CH5
-        filter_type: lowpass # Butterworth lowpass filter
-        cutoff_freq: 10  # Cutoff frequency in Hz: Was not necessary for an NI-DAQ device sampling at 1000 Hz, but useful for OE analog data sampled at 30khz. I think the eyetracker is only 1000hz
-        order: 4  # Filter order
+        channel_id: CH8
+        filter_type: golay
+        window_size: 3001  
+        poly_order: 3  # Filter order
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_x
-        channel_id: CH3
+        channel_id: CH6
         filter_type: gaussian
         gaussian_std: 5
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_y
-        channel_id: CH4
+        channel_id: CH7
         filter_type: gaussian
         gaussian_std: 5
     - class: AODR_custom_enhancers.SaccadesEnhancer
       when: "True"
       args:
         x_buffer_name: gaze_x
-        x_channel_id: CH3
+        x_channel_id: CH6
         y_buffer_name: gaze_y
-        y_channel_id: CH4
+        y_channel_id: CH7
         fp_off_name: "fp_off"
         all_off_name: "all_off"
         max_saccades: 2                           # number of saccades to look for (helps avoid false positives)
