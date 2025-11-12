@@ -21,7 +21,7 @@ Click "Clone a repository from the Internet..." and add Lab_Matlab_Utilities fro
 Do the same to add Lab_Pipelines from The Gold Lab GitHub: https://github.com/TheGoldLab/Lab_Pipelines.
 
 ## Installing Pyramid
-Documentation and installation instructions are included in the [Pyramid](https://github.com/benjamin-heasly/pyramid) readme.
+Documentation and installation instructions are included in the [Pyramid](https://github.com/lwthompson2/pyramid) readme.
 
 If you don't already have Python, install it from python.org or the Microsoft Store.
 
@@ -66,6 +66,9 @@ Now File>Open Folder> select GitHub\Lab_Pipelines\experiments\aodr (you could ma
 Open Pyramid_Example_Plexon.py for .plx files or spikeinterface_testing_v2.ipynb for OpenEphys.
 Follow the documentation written in the spikeinterface notebook to run OpenEphys data through pyramid. If using Pyramid_Example_Plexon.py, change the path names and file name to the corresponding locations and files on your computer. You might want to create a separate, new folder for output.
 Run.
+
+You will likely encounter some errors related to fiass depending on your system. Google is your friend to resolve those issues.
+If you want to use kilosort4 you will likely want to follow their instructions for getting the GPU CUDA drivers up and running.
 
 ## Installing MATLAB and running test scripts
 MATLAB is the standard programming language for scientific computing in the neurosciences. Custom scripts for data analysis (after preprocessing with pyramid) are written in MATLAB.
