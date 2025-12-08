@@ -19,6 +19,7 @@ from spikeinterface.curation import apply_curation
 from spikeinterface.widgets import plot_sorting_summary
 import spikeinterface.sortingcomponents as sc
 import spikeinterface.widgets as sw
+from spikeinterface.extractors import read_phy, read_binary
 from probeinterface import generate_tetrode, ProbeGroup, Probe, generate_linear_probe
 from probeinterface import write_probeinterface, read_probeinterface
 from probeinterface.plotting import plot_probe, plot_probe_group
@@ -171,30 +172,58 @@ class OpenEphysSessionSorter():
 
     def run_kilosort4(self):
         # Does not use the gui, but instead runs kilosort4 directly from the API using default parameters.
-        job_kwargs = dict(n_jobs=1, progress_bar=True)
+        #job_kwargs = dict(n_jobs=12, progress_bar=True)
         #si.set_global_job_kwargs(**job_kwargs)
+        #self.recording = self.recording.save(folder=self.out_folder+"/"+self.sorter_name, format='binary', **job_kwargs)
+        #self.recording = read_binary(self.filename, dtype = np.int16, sampling_frequency=self.fs, num_channels=self.N)
         params = si.get_default_sorter_params('kilosort4')
-        self.sorting = si.run_sorter_by_property('kilosort4', self.recording,
-                                            grouping_property='group',     
-                                            folder=self.out_folder+"/"+self.sorter_name, 
-                                            verbose=True, docker_image=False, **params)
-        # Now use parallelization?
+        params['delete_recording_dat'] = False # Keep the .dat file for potential re-use and computing things. You do not need to convert to binary prior to running this way.
+        params['n_jobs'] = -1 # Use all available CPU cores for writing the binary file.
+        params['pool_engine'] = "thread" # Using ProcessPoolExecutor (default) causes issues on windows if n_jobs=-1. Can set n_jobs to something like 8 and it will still work though.
         job_kwargs = dict(n_jobs=-1, progress_bar=True)
+        si.set_global_job_kwargs(**job_kwargs)
+        self.sorting = si.run_sorter(sorter_name='kilosort4', recording=self.recording,
+                                            folder=self.out_folder+"/"+self.sorter_name, 
+                                            verbose=True, docker_image=False, 
+                                            remove_existing_folder=True, **params)
+        
+    def run_kilosort4_analyzer(self):
+        # Check if self.sorting exists
+        if not hasattr(self, 'sorting') or self.sorting is None:
+            print("No sorting object found. Attempting to load from output directory...")
+            sorting_output_dir = os.path.join(self.out_folder, self.sorter_name)
+            if not os.path.exists(sorting_output_dir):
+                print(f"ERROR: Sorting output directory {sorting_output_dir} does not exist.")
+                return
+            try:
+                # Use the kilosort4 extractor from spikeinterface
+                self.sorting = si.read_sorter_folder(sorting_output_dir)
+                print("Loaded Kilosort4 sorting from output directory.")
+            except Exception as e:
+                print(f"Failed to load Kilosort4 sorting: {e}")
+                return
+
+        # Can ignore OpenMP warnings, if still encountering issues, set n_jobs=1
+        job_kwargs = dict(n_jobs=8, progress_bar=True)
+        si.set_global_job_kwargs(**job_kwargs)
         self.sorting_analyzer = si.create_sorting_analyzer(self.sorting, self.recording,
                                                     format="binary_folder", folder=self.out_folder+"/analyzer", 
-                                                    overwrite=True,
-                                                    **job_kwargs)
-        self.sorting_analyzer.compute("random_spikes", method="uniform", max_spikes_per_unit=500)
-        self.sorting_analyzer.compute("waveforms", **job_kwargs)
-        self.sorting_analyzer.compute("templates")
-        self.sorting_analyzer.compute("template_similarity")
-        self.sorting_analyzer.compute("noise_levels")
-        self.sorting_analyzer.compute("unit_locations", method="monopolar_triangulation")
-        self.sorting_analyzer.compute("correlograms", window_ms=100, bin_ms=5.)
-        self.sorting_analyzer.compute("isi_histograms")
-        self.sorting_analyzer.compute("principal_components", n_components=3, mode='by_channel_global', whiten=True, **job_kwargs)
-        self.sorting_analyzer.compute("quality_metrics", metric_names=["snr", "firing_rate"])
-        self.sorting_analyzer.compute("spike_amplitudes", **job_kwargs)
+                                                    overwrite=True)
+        compute_steps = {
+            "random_spikes": {"method": "uniform", "max_spikes_per_unit": 500},
+            "waveforms": {},
+            "templates": {},
+            "template_similarity": {},
+            "noise_levels": {},
+            "unit_locations": {},
+            "correlograms": {"window_ms": 100, "bin_ms": 5.},
+            "isi_histograms": {},
+            "principal_components": {},
+            "quality_metrics": {"metric_names": ["snr", "firing_rate"]},
+            "spike_amplitudes": {}
+        }
+        self.sorting_analyzer.compute(compute_steps)
+        
                                                     
     def convert_to_binary(self):
         # Create a new binary file and copy the data to it 60,000 samples at a time.
@@ -211,9 +240,9 @@ class OpenEphysSessionSorter():
         # format.
         print("Converting to binary for kilosort (this might take a bit)...")
         dtype = np.int16
-        self.filename, N, c, s, fs, probe_path = io.spikeinterface_to_binary(
+        self.filename, self.N, c, s, self.fs, probe_path = io.spikeinterface_to_binary(
             self.recording, self.out_folder, data_name=self.sorter_name+'.bin', dtype=dtype,
-            chunksize=60000, export_probe=True, probe_name='kilosort_probe.prb')
+            chunksize=80000, export_probe=True, probe_name='kilosort_probe.prb')
         
         # At this point, it’s a good idea to open the Kilosort gui and check that the data
         # and probe appear to have been loaded correctly and no settings need to be tweaked.

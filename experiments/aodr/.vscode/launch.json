@@ -11,8 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "subProcess": false,
-            "args": ["convert"]
+            "subProcess": false
         }
     ]
 }

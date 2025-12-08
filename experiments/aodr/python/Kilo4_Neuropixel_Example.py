@@ -12,7 +12,7 @@ import pandas as pd
 
 # Paths and file names
 expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr"
-sessDir = "MrM_NP_2025-11-11_12-38-46"
+sessDir = "MrM_NP_2025-11-14_12-39-27"
 os.chdir(expDir)
 dataSearchPath = "C:/NeuronalData/Raw/"
 pyramidSearchPath = expDir+"/ecodes"
@@ -22,7 +22,7 @@ currentFile = "experiment1.nwb"
 trialFileOutputName = baseSaveDir+sessDir+".hdf5"
 sorted_out = 'C:/NeuronalData/Sorted/'+sessDir+"/"
 sys.path.append(expDir+"/python")
-params_path = sorted_out+"kilosort4/params.py"
+params_path = sorted_out+"kilosort4/sorter_output/params.py"
 
 
 def run_initial_pipeline():
@@ -33,9 +33,13 @@ def run_initial_pipeline():
     sorter.clean_tree()
     sorter.read_data()
     sorter.bandpass()
+    # Really 2 methods to run Kilosort4: either call the GUI manually, or run it programmatically below.
+    # 1) Run Kilosort4 programmatically through spikeinterface:
     sorter.run_kilosort4()
+    # 2) Alternatively, you can run the Kilosort4 GUI manually by uncommenting the line below and commenting out the sorter.run_kilosort4() line:
     #sorter.convert_to_binary()
-    print("Binary conversion complete. Please run Kilosort4 GUI manually.")
+    # In a terminal to run the gui you need to run: python -m kilosort
+    print("Kilosort4 sorting complete")
 
 
 def run_postkilosort():
@@ -44,8 +48,12 @@ def run_postkilosort():
                  stream_name = 'ProbeA-AP',
                  sorter_name='kilosort4')
     sorter.read_data()
-    sorter.open_phy(alt_path=sorted_out+"kilosort4/")
-    sorter.overwrite_timestamps(alt_path=sorted_out+"kilosort4/")
+    # Phy GUI has some documented issues with Template and Feature views when installed in an environment with other stuff.
+    # Currently I am creating a new conda environment just for phy to get around this using
+    # the phy2_local.yml file in this repo. It seems to work fine if phy is installed in a clean environment:
+    # https://github.com/cortex-lab/phy/issues/1356
+    #sorter.open_phy(alt_path=sorter.out_folder+"/"+sorter.sorter_name+"/sorter_output/")
+    sorter.overwrite_timestamps(alt_path=sorter.out_folder+"/"+sorter.sorter_name+"/sorter_output/")
 
 def run_conversion():
     cli.main(["convert", 
