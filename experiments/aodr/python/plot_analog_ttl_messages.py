@@ -7,40 +7,44 @@ from collections import defaultdict
 
 
 # --- CONFIG ---
-NWB_FILE = r"C:\NeuronalData\Raw\Test_NP_2025-12-05_11-23-10\Record Node 107\experiment1.nwb"  # Set this to your NWB file
-SESSION_DIR = r"C:\NeuronalData\Raw\Test_NP_2025-12-05_11-23-10"  # Set this to your Open Ephys session folder
+NWB_FILE = r"C:\NeuronalData\Raw\MrM_NP_2025-11-14_12-39-27\Record Node 107\experiment1.nwb"  # Set this to your NWB file
+SESSION_DIR = r"C:\NeuronalData\Raw\MrM_NP_2025-11-14_12-39-27"  # Set this to your Open Ephys session folder
 ANALOG_CHANNELS = [0, 1]  # Acquisition board channels to plot
 WINDOW_SEC = 5.0  # Default view window in seconds
 
-# --- LOAD ANALOG DATA ---
-
-# Load main analog data
-recording_analog = se.read_nwb_recording(file_path=NWB_FILE, electrical_series_path='acquisition/Acquisition Board-106.acquisition_board')
-sampling_rate = recording_analog.get_sampling_frequency()
-duration_sec = recording_analog.get_num_frames() / sampling_rate
-analog_data = recording_analog.get_traces(channel_ids=ANALOG_CHANNELS)
-
-# Try to load additional electrical series if present
-additional_analog_data = None
-additional_sampling_rate = None
-additional_start_time = 0.0
-try:
-    recording_additional = se.read_nwb_recording(file_path=NWB_FILE, electrical_series_path='acquisition/NI-DAQmx-131.PXIe-6363')
-    additional_sampling_rate = recording_additional.get_sampling_frequency()
-    additional_analog_data = recording_additional.get_traces(channel_ids=[772, 773])
-    if hasattr(recording_additional, 'get_start_time'):
-        additional_start_time = recording_additional.get_start_time()
-    else:
-        additional_start_time = 0.0
-except Exception:
-    recording_additional = None
-    additional_analog_data = None
-    additional_sampling_rate = None
-    additional_start_time = 0.0
-
-# --- LOAD TTL AND MESSAGES USING OPEN EPHYS ---
+# --- LOAD session data ---
 session = Session(SESSION_DIR)
 recording = session.recordnodes[0].recordings[0]
+
+# --- LOAD ANALOG DATA ---
+# Use recording.nwb['acquisition'] to get analog data and timestamps efficiently
+analog_data = None
+analog_timestamps = None
+sampling_rate = None
+additional_analog_data = None
+additional_analog_timestamps = None
+additional_sampling_rate = None
+datasets = list(recording.nwb["acquisition"].keys())
+for item in datasets:
+    # Acquisition board stream
+    if "acquisition_board" in item and "TTL" not in item:
+        cont = recording.Continuous(recording.nwb, item)
+        analog_data = cont.samples[:, ANALOG_CHANNELS]
+        analog_timestamps = cont.timestamps
+        if len(analog_timestamps) > 1:
+            sampling_rate = 1.0 / np.mean(np.diff(analog_timestamps))
+        else:
+            sampling_rate = None
+    # NI-DAQmx stream
+    elif "PXIe-6363" in item and "TTL" not in item:
+        cont = recording.Continuous(recording.nwb, item)
+        additional_analog_data = cont.samples[:, ANALOG_CHANNELS]
+        additional_analog_timestamps = cont.timestamps
+        if len(additional_analog_timestamps) > 1:
+            additional_sampling_rate = 1.0 / np.mean(np.diff(additional_analog_timestamps))
+        else:
+            additional_sampling_rate = None
+
 
 # Get TTL events (only when bit is high)
 ttl_events = recording.events
@@ -358,9 +362,9 @@ def plot_full_data_with_linked_zoom():
         add = additional_analog_data[:, 0]
         # Resample to lowest sampling rate
         min_rate = min(sampling_rate, additional_sampling_rate)
-        # Calculate time vectors
-        t_main = recording_analog.get_start_time() + np.arange(main.shape[0]) / sampling_rate
-        t_add = additional_start_time + np.arange(add.shape[0]) / additional_sampling_rate
+        # Use timestamps arrays directly for time vectors
+        t_main = analog_timestamps
+        t_add = additional_analog_timestamps
         # Interpolate both to common time base
         t_common_start = max(t_main[0], t_add[0])
         t_common_end = min(t_main[-1], t_add[-1])
@@ -402,12 +406,12 @@ def plot_full_data_with_linked_zoom():
         ax_corr.legend(loc='upper right')
         ax_corr.set_xlabel('Time (s)')
 
-    # Plot all analog data using time vector, downsample if needed
+    # Plot all analog data using timestamps array, downsample if needed
     n_samples = analog_data.shape[0]
     max_points = 100_000
     ds_factor = max(1, n_samples // max_points)
     idxs = np.arange(0, n_samples, ds_factor)
-    t_analog = recording_analog.get_start_time() + idxs / sampling_rate
+    t_analog = analog_timestamps[idxs]
     for i in range(analog_data.shape[1]):
         ax_analog.plot(t_analog, analog_data[idxs, i], label=f"Analog {ANALOG_CHANNELS[i]}")
     ax_analog.set_ylabel("Analog Value")
@@ -415,13 +419,40 @@ def plot_full_data_with_linked_zoom():
     ax_analog.legend(loc='upper right')
     ax_analog.set_xlabel("Time (s)")
 
+    # Add vertical lines for 'UDP' and 'name=4913' messages to all subplots (no text)
+    udp_color = f"C{1%10}"  # TTL line 1 color
+    name4913_color = f"C{3%10}"  # TTL line 3 color
+    udp_lines = [ts for ts, msg in messages if 'UDP' in (msg.decode(errors='replace') if isinstance(msg, bytes) else str(msg))]
+    name4913_lines = [ts for ts, msg in messages if 'name=4913' in (msg.decode(errors='replace') if isinstance(msg, bytes) else str(msg))]
+    # Plot UDP lines
+    for ts in udp_lines:
+        ax_analog.axvline(ts, color=udp_color, linestyle='--', alpha=0.5)
+    if ax_additional is not None and additional_analog_data is not None and additional_analog_timestamps is not None:
+        for ts in udp_lines:
+            ax_additional.axvline(ts, color=udp_color, linestyle='--', alpha=0.5)
+    for ts in udp_lines:
+        ax_ttl.axvline(ts, color=udp_color, linestyle='--', alpha=0.5)
+    if ax_corr is not None:
+        for ts in udp_lines:
+            ax_corr.axvline(ts, color=udp_color, linestyle='--', alpha=0.5)
+    # Plot name=4913 lines
+    for ts in name4913_lines:
+        ax_analog.axvline(ts, color=name4913_color, linestyle='--', alpha=0.5)
+    if ax_additional is not None and additional_analog_data is not None and additional_analog_timestamps is not None:
+        for ts in name4913_lines:
+            ax_additional.axvline(ts, color=name4913_color, linestyle='--', alpha=0.5)
+    for ts in name4913_lines:
+        ax_ttl.axvline(ts, color=name4913_color, linestyle='--', alpha=0.5)
+    if ax_corr is not None:
+        for ts in name4913_lines:
+            ax_corr.axvline(ts, color=name4913_color, linestyle='--', alpha=0.5)
+
     # Plot all additional analog data if present, downsample if needed
-    if ax_additional is not None and additional_analog_data is not None:
+    if ax_additional is not None and additional_analog_data is not None and additional_analog_timestamps is not None:
         n_samples_additional = additional_analog_data.shape[0]
         ds_factor_add = max(1, n_samples_additional // max_points)
         idxs_add = np.arange(0, n_samples_additional, ds_factor_add)
-        # Create time vector for downsampled additional analog data
-        t_additional = additional_start_time + idxs_add / additional_sampling_rate
+        t_additional = additional_analog_timestamps[idxs_add]
         for i in range(additional_analog_data.shape[1]):
             ax_additional.plot(t_additional, additional_analog_data[idxs_add, i], label=f"NI-DAQmx Ch {i}")
         ax_additional.set_ylabel("Additional Analog Value")
@@ -443,7 +474,7 @@ def plot_full_data_with_linked_zoom():
             while i < len(probe_events):
                 if probe_events[i][1] == 1:
                     start_ts = probe_events[i][0]
-                    end_ts = recording_analog.get_start_time() + (n_samples - 1) / sampling_rate
+                    end_ts = analog_timestamps[-1]
                     j_found = False
                     for j in range(i+1, len(probe_events)):
                         if probe_events[j][1] == 0:
@@ -453,7 +484,7 @@ def plot_full_data_with_linked_zoom():
                             break
                     ax_ttl.hlines(0, start_ts, end_ts, color=f"C{line%10}", alpha=0.8, linewidth=2)
                     ttl_lines.add(0)
-                    if end_ts == recording_analog.get_start_time() + (n_samples - 1) / sampling_rate:
+                    if end_ts == analog_timestamps[-1]:
                         i += 1
                 else:
                     i += 1
@@ -462,7 +493,7 @@ def plot_full_data_with_linked_zoom():
         while i < len(acq_events):
             if acq_events[i][1] == 1:
                 start_ts = acq_events[i][0]
-                end_ts = recording_analog.get_start_time() + (n_samples - 1) / sampling_rate
+                end_ts = analog_timestamps[-1]
                 j_found = False
                 for j in range(i+1, len(acq_events)):
                     if acq_events[j][1] == 0:
@@ -472,20 +503,20 @@ def plot_full_data_with_linked_zoom():
                         break
                 ax_ttl.hlines(line, start_ts, end_ts, color=f"C{line%10}", alpha=0.8, linewidth=2)
                 ttl_lines.add(line)
-                if end_ts == recording_analog.get_start_time() + (n_samples - 1) / sampling_rate:
+                if end_ts == analog_timestamps[-1]:
                     i += 1
             else:
                 i += 1
 
     # If additional analog data is present, plot PXIe-6363 TTL events at negative line numbers
-    if ax_additional is not None and additional_analog_data is not None:
+    if ax_additional is not None and additional_analog_data is not None and additional_analog_timestamps is not None:
         for line in range(16):
             pxi_events = [(row.timestamp, row.state) for _, row in ttl_events.iterrows() if row.line == line and row.stream_name == "PXIe-6363"]
             i = 0
             while i < len(pxi_events):
                 if pxi_events[i][1] == 1:
                     start_ts = pxi_events[i][0]
-                    end_ts = recording_analog.get_start_time() + (n_samples - 1) / sampling_rate
+                    end_ts = additional_analog_timestamps[-1]
                     for j in range(i+1, len(pxi_events)):
                         if pxi_events[j][1] == 0:
                             end_ts = pxi_events[j][0]
@@ -493,7 +524,7 @@ def plot_full_data_with_linked_zoom():
                             break
                     ax_ttl.hlines(-line, start_ts, end_ts, color=f"C{line%10}", alpha=0.8, linewidth=2)
                     ttl_lines.add(-line)
-                    if end_ts == recording_analog.get_start_time() + (n_samples - 1) / sampling_rate:
+                    if end_ts == additional_analog_timestamps[-1]:
                         i += 1
                 else:
                     i += 1

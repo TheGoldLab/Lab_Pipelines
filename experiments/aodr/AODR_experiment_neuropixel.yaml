@@ -86,7 +86,7 @@ readers:
       pairing_strategy: closest # Match each UDP event to the closest TTL event in time
       sync_snap_threshold: 0.002 # The Rex machine times have at least 1 ms precision, so as long as the UDP events GUI checks every ms, we should be able to sync information for each trial.
   gaze_x_reader:
-    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTimeSeriesReader
     args:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_x
@@ -101,7 +101,7 @@ readers:
             args:
               gain: 10.2
   gaze_y_reader:
-    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTimeSeriesReader
     args:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_y
@@ -116,7 +116,7 @@ readers:
             args:
               gain: 10.2
   pupil_reader:
-    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionSignalReader
+    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTimeSeriesReader
     args:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: pupil
@@ -147,6 +147,27 @@ trials:
     - class: pyramid.trials.standard_enhancers.RenameRescaleEnhancer
       args:
         rules_csv: [ecodes/default_ecode_rules.csv, ecodes/AODR_ecode_rules.csv]
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_x
+        channel_id: CH1
+        filter_type: golay
+        window_size: 3001  
+        poly_order: 2  # Filter order
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: gaze_y
+        channel_id: CH2
+        filter_type: golay
+        window_size: 3001  
+        poly_order: 2  # Filter order
+    - class: pyramid.trials.standard_adjusters.SignalSmoother
+      args:
+        buffer_name: pupil
+        channel_id: CH3
+        filter_type: golay
+        window_size: 3001  
+        poly_order: 2  # Filter order
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_x

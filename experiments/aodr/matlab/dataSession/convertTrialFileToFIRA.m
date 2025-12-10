@@ -232,36 +232,46 @@ end
 dataInFIRAFormat.ecodes.name = dataInFIRAFormat.ecodes.name(:)';
 
 %% Add analog signals
-%
-signalNames = fieldnames(dataInTrialFileFormat(2).signals);
-numSignals = length(signalNames);
-dataInFIRAFormat.analog.data = struct( ...
-    'start_time', cell(numTrials, numSignals), ...
-    'length', [], ...
-    'values', []);
+% For continuous data sources that only have sample values
+if ~isempty(dataInTrialFileFormat(2).signals)
+    signalNames = fieldnames(dataInTrialFileFormat(2).signals);
+    signalNames = intersect(signalNames, {'gaze_x', 'gaze_y', 'pupil'});
+    numSignals = length(signalNames);
+    if any(dataInTrialFileFormat(2).signals.(signalNames{1}).type == 'SignalTimeChunk')
+        dataInFIRAFormat.analog.data = struct( ...
+            'length', [], ...
+            'values', []);
+    else
+        dataInFIRAFormat.analog.data = struct( ...
+            'start_time', cell(numTrials, numSignals), ...
+            'length', [], ...
+            'values', []);
+    end
 
-% Loop through each signal type
-for ss = 1:numSignals
+    % Loop through each signal type
+    for ss = 1:numSignals
 
-    % Add name, sample rate
-    dataInFIRAFormat.analog.name = ...
-        cat(2, dataInFIRAFormat.analog.name, signalNames{ss});
-    dataInFIRAFormat.analog.acquire_rate = ...
-        cat(2, dataInFIRAFormat.analog.acquire_rate, ...
-        dataInTrialFileFormat(2).signals.(signalNames{ss}).sample_frequency);
-    dataInFIRAFormat.analog.store_rate = dataInFIRAFormat.analog.acquire_rate;
+        % Add name, sample rate
+        dataInFIRAFormat.analog.name = ...
+            cat(2, dataInFIRAFormat.analog.name, signalNames{ss});
+        dataInFIRAFormat.analog.acquire_rate = ...
+            cat(2, dataInFIRAFormat.analog.acquire_rate, ...
+            dataInTrialFileFormat(2).signals.(signalNames{ss}).sample_frequency);
+        dataInFIRAFormat.analog.store_rate = dataInFIRAFormat.analog.acquire_rate;
 
-    % Add data
-    for tt = 1:numTrials
-        dataInFIRAFormat.analog.data(tt,ss).start_time = ...
-            dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).first_sample_time;
-        dataInFIRAFormat.analog.data(tt,ss).values = ...
-            dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).signal_data;
-        dataInFIRAFormat.analog.data(tt,ss).length = ...
-            length(dataInFIRAFormat.analog.data(tt,ss).values);
+        % Add data
+        for tt = 1:numTrials
+            if ~any(dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).type == 'SignalTimeChunk')
+                dataInFIRAFormat.analog.data(tt,ss).start_time = ...
+                    dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).first_sample_time;
+            end
+            dataInFIRAFormat.analog.data(tt,ss).values = ...
+                dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).signal_data;
+            dataInFIRAFormat.analog.data(tt,ss).length = ...
+                length(dataInFIRAFormat.analog.data(tt,ss).values);
+        end
     end
 end
-
 %% Add spikes from trial numeric events.
 %
 

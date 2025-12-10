@@ -12,7 +12,7 @@ import pandas as pd
 
 # Paths and file names
 expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr"
-sessDir = "MrM_NP_2025-11-14_12-39-27"
+sessDir = "MrM_NP_2025-11-11_12-38-46"
 os.chdir(expDir)
 dataSearchPath = "C:/NeuronalData/Raw/"
 pyramidSearchPath = expDir+"/ecodes"
