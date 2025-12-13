@@ -128,6 +128,7 @@ readers:
       # Override params_file on cli with: --readers phy_reader.params_file=my_real_params.py
       params_file: /Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Sorted/Anubis_2024-06-25_13-40-57/spykingcircus2/phy/params.py
       result_name: phy_clusters
+      cluster_filter: '(group != "noise")' #'(KSLabel != "mua") and (ContamPct < 20)'
 trials:
   # Start trials when TTL line 1 goes high.
   start_buffer: ttl_1

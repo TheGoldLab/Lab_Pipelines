@@ -7,12 +7,14 @@ import pandas as pd
 # Usage:
 # Run initial steps: python Kilo4_Neuropixel_Example.py initial
 # Then manually run Kilosort4 GUI to curate and save results: python -m kilosort
-# After running Kilosort4 GUI, run post-processing: python Kilo4_Neuropixel_Example.py postkilosort (open phy and overwrite timestamps)
+# After running Kilosort4 GUI, run post-processing: python Kilo4_Neuropixel_Example.py postkilosort (overwrite timestamps after manual curation in phy)
 # Run conversion: python Kilo4_Neuropixel_Example.py convert
+# Having issues using multiprocessing/threading, especially during writing? 
+# Try a different terminal like cmd, powershell, anaconda prompt, or git bash. I had luck with cmd prompt.
 
 # Paths and file names
 expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr"
-sessDir = "MrM_NP_2025-11-11_12-38-46"
+sessDir = "MrM_NP_2025-11-14_12-39-27"
 os.chdir(expDir)
 dataSearchPath = "C:/NeuronalData/Raw/"
 pyramidSearchPath = expDir+"/ecodes"
@@ -52,6 +54,7 @@ def run_postkilosort():
     # Currently I am creating a new conda environment just for phy to get around this using
     # the phy2_local.yml file in this repo. It seems to work fine if phy is installed in a clean environment:
     # https://github.com/cortex-lab/phy/issues/1356
+    # If it's fixed you should be able to use the following line to open the phy GUI programmatically:
     #sorter.open_phy(alt_path=sorter.out_folder+"/"+sorter.sorter_name+"/sorter_output/")
     sorter.overwrite_timestamps(alt_path=sorter.out_folder+"/"+sorter.sorter_name+"/sorter_output/")
 
@@ -71,7 +74,10 @@ def run_conversion():
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python Kilo4_Neuropixel_Example.py [initial|postkilosort|convert]")
+        print("Usage: python Kilo4_Neuropixel_Example.py [initial|postkilosort|convert], running all steps...")
+        run_initial_pipeline()
+        run_postkilosort()
+        run_conversion()
     else:
         step = sys.argv[1].lower()
         if step == "initial":

@@ -101,7 +101,8 @@ class OpenEphysSessionSorter():
             else:
                 self.recording_file = self.session_dir
             data_source: str = 'acquisition/Neuropix-PXI-122.ProbeA-AP' # If wrong, output error will list available series options
-            self.recording = se.read_nwb_recording(file_path=self.recording_file, electrical_series_path=data_source)
+            # YOU MUST TELL TELL THE BASE RECORDING OBJECT TO LOAD THE TIME VECTOR FROM THE NWB FILE!!! OR YOU WILL END UP WITH DESYNCED TIME VECTORS!
+            self.recording = se.read_nwb_recording(file_path=self.recording_file, electrical_series_path=data_source,load_time_vector=True)
             probe_dir = Path(self.session_dir + os.listdir(self.session_dir)[0] + "/") # assuming your probe file is in this directory
             self.np_probe = next(probe_dir.glob("*.json"), None)  # returns a Path or None
             if self.np_probe is None:
@@ -109,6 +110,7 @@ class OpenEphysSessionSorter():
             else:
                 pgroup = read_probeinterface (self.np_probe)
                 self.recording.set_probegroup(pgroup, in_place=True)
+                print("Completed loading...")
     
     def set_tetrode(self):
         print("Setting tetrode probe...")
@@ -306,26 +308,13 @@ class OpenEphysSessionSorter():
             si.export_to_phy(self.sorting_analyzer, output_folder=self.out_folder+"phy", verbose=False)
 
     def overwrite_timestamps(self, alt_path=None):
-        print("Overwriting timestamps in Phy params.py...")
-        first_sample_time = self.recording.get_start_time()
-        # Overwrite the params.py file to set the first time stamp for the first sample
+        print("Writing sample timestamps to interpret phy spiketime.npy sample numbers...")
+        # Get the time vector from the recording
+        time_vector = self.recording.get_times()
         if alt_path is None:
-            params_path = self.out_folder+"phy/params.py"
+            np.save(self.out_folder+self.sorter_name+"sorter_output/sample_times.npy", time_vector)
         else:
-            params_path = alt_path+"params.py"
-
-        if not os.path.exists(params_path):
-            print(f"ERROR: {params_path} does not exist.")
-            return
-        else:
-            with open(params_path, "r") as f:
-                lines = f.readlines()
-            with open(params_path, "w") as f:
-                for line in lines:
-                    if line.startswith("offset"):
-                        f.write(f"offset = {first_sample_time}\n")
-                    else:
-                        f.write(line)
+            np.save(alt_path+"sample_times.npy", time_vector)
 
     def open_phy(self,alt_path=None):
         if alt_path is None:
