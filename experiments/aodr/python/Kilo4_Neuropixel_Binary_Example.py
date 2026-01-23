@@ -1,4 +1,5 @@
 import sys, os
+import phy
 import spikeinterface.widgets as sw
 from AODR_session_sorters import OpenEphysSessionSorter as OES
 from pyramid import cli
@@ -18,6 +19,8 @@ import pandas as pd
     # Currently I am creating a new conda environment just for phy to get around this using
     # the phy2_local.yml file in this repo. It seems to work fine if phy is installed in a clean environment:
     # https://github.com/cortex-lab/phy/issues/1356
+        # cd path/to/my/spikesorting/output
+        # phy template-gui params.py
     # Once you finish manual curation in phy, run this script with the postkilosort argument to overwrite timestamps. These timestamps will be more accurate
     # than the original ones from kilosort since kilosort assumes samples are taken at a constant linear rate, which is not always true.
 # 3) Conversion step uses pyramid cli to convert the session to a pyramid trial file (hdf5). Make sure to set the correct paths below.
@@ -34,13 +37,13 @@ trialFileOutputName = baseSaveDir+sessDir+".hdf5"
 sorted_out = 'C:/NeuronalData/Sorted/'+sessDir+"/"
 sys.path.append(expDir+"/python")
 params_path = sorted_out+"kilosort4/sorter_output/params.py"
-
+stream_name = 'Record Node 107#Neuropix-PXI-122.ProbeA-AP'
 
 def run_initial_pipeline():
     # If you aren't sure about the stream_name, it will usually error out and print the available stream names in the error message. These change depending on equipment and save settings.
     sorter = OES(session_dir=dataSearchPath+sessDir+"/",
                  out_folder=sorted_out,
-                 stream_name = 'Record Node 107#Neuropix-PXI-122.ProbeA-AP',
+                 stream_name = stream_name,
                  sorter_name='kilosort4')
     sorter.clean_tree() # Delete previous sorting results if they exist
     sorter.read_data() # Reads data and sets the neuropixel probe (binary files come with probe attached already!)
@@ -56,7 +59,7 @@ def run_initial_pipeline():
 def run_postkilosort():
     sorter = OES(session_dir=dataSearchPath+sessDir+"/",
                  out_folder=sorted_out,
-                 stream_name = 'ProbeA-AP',
+                 stream_name = stream_name,
                  sorter_name='kilosort4')
     sorter.read_data()
     # Phy GUI has some documented issues with Template and Feature views when installed in an environment with other stuff.
@@ -77,7 +80,8 @@ def run_conversion():
         "message_reader.session_dir="+dataSearchPath+sessDir,
         "gaze_x_reader.session_dir="+dataSearchPath+sessDir,
         "gaze_y_reader.session_dir="+dataSearchPath+sessDir,
-        "pupil_reader.session_dir="+dataSearchPath+sessDir])
+        "pupil_reader.session_dir="+dataSearchPath+sessDir,
+        "phy_reader.params_file="+params_path])
     print("Conversion complete.")
 
 if __name__ == "__main__":
