@@ -1,5 +1,5 @@
 experiment:
-  # Created 3/6/24 by LWT based on an initial version by JIG and BH
+  # For a single neuropixel recording session of the AODR task using the Open Ephys GUI saved in binary format
   experimenter:
     - Zweigle, Jean
     - Thompson, Lowell
@@ -88,7 +88,7 @@ readers:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_x
       stream_name: acquisition_board
-      channel_names: ["CH1"] # This depends on the channel configuration you set in the Open Ephys GUI. The first X channels are continuous neural data for these files
+      channel_names: ["ADC1"] # This depends on the channel configuration you set in the Open Ephys GUI. The first X channels are continuous neural data for these files
     extra_buffers:
       # Scale up the gaze signals by a known gain.
       gaze_x:
@@ -103,7 +103,7 @@ readers:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: gaze_y
       stream_name: acquisition_board
-      channel_names: ["CH2"]
+      channel_names: ["ADC2"]
     extra_buffers:
       # Scale up the gaze signals by a known gain.
       gaze_y:
@@ -118,14 +118,7 @@ readers:
       session_dir: "Anubis_2024-07-17_13-03-43"
       result_name: pupil
       stream_name: acquisition_board
-      channel_names: ["CH3"]
-  phy_reader:
-    class: pyramid.neutral_zone.readers.phy.PhyClusterEventReader
-    args:
-      # Override params_file on cli with: --readers phy_reader.params_file=my_real_params.py
-      params_file: /Users/lowell/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Data/Anubis/Sorted/Anubis_2024-06-25_13-40-57/spykingcircus2/phy/params.py
-      result_name: phy_clusters
-      cluster_filter: '(group != "noise")' #'(KSLabel != "mua") and (ContamPct < 20)'
+      channel_names: ["ADC3"]
 trials:
   # Start trials when TTL line 1 goes high.
   start_buffer: ttl_1
@@ -148,43 +141,43 @@ trials:
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_x
-        channel_id: CH1
+        channel_id: ADC1
         filter_type: golay
         window_size: 3001  
         poly_order: 2  # Filter order
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_y
-        channel_id: CH2
+        channel_id: ADC2
         filter_type: golay
         window_size: 3001  
         poly_order: 2  # Filter order
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: pupil
-        channel_id: CH3
+        channel_id: ADC3
         filter_type: golay
         window_size: 3001  
         poly_order: 2  # Filter order
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_x
-        channel_id: CH1
+        channel_id: ADC1
         filter_type: gaussian
         gaussian_std: 5
     - class: pyramid.trials.standard_adjusters.SignalSmoother
       args:
         buffer_name: gaze_y
-        channel_id: CH2
+        channel_id: ADC2
         filter_type: gaussian
         gaussian_std: 5
     - class: AODR_custom_enhancers.SaccadesEnhancer
       when: "True"
       args:
         x_buffer_name: gaze_x
-        x_channel_id: CH1
+        x_channel_id: ADC1
         y_buffer_name: gaze_y
-        y_channel_id: CH2
+        y_channel_id: ADC2
         fp_off_name: "fp_off"
         all_off_name: "all_off"
         max_saccades: 2                           # number of saccades to look for (helps avoid false positives)
@@ -198,36 +191,3 @@ trials:
       package_path: .
       args:
         min_angular_distance_to_target_deg: 25
-plotters:
-    # Plot basic info about conversion process, plus a "Quit" button.
-  - class: pyramid.plotters.standard_plotters.BasicInfoPlotter
-    # Plot raw numeric event data.
-  - class: pyramid.plotters.standard_plotters.NumericEventsPlotter
-    args:
-      xmin: -3.0
-      xmax: 3.0
-    # List raw text event data.
-  - class: pyramid.plotters.standard_plotters.TextEventsPlotter
-  - class: pyramid.plotters.standard_plotters.SignalChunksPlotter
-    args:
-      xmin: -3.0
-      xmax: 3.0
-      match_pattern: gaze
-    # Plot saccades.
-  - class: pyramid.plotters.standard_plotters.EnhancementXYPlotter
-    args:
-      xmin: -20
-      xmax: 20
-      ymin: -15
-      ymax: 15
-      # These XY pairs are plotted as separate points.
-      xy_points:
-        fp_x: fp_y
-        t1_x: t1_y
-        t2_x: t2_y
-        sample_x: sample_y
-      # These XY pairs are grouped together and plotted as lines.
-      xy_groups:
-        scored_saccade:
-          x_start: y_start
-          x_end: y_end

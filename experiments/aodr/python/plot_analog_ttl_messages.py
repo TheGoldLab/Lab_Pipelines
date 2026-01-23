@@ -7,8 +7,8 @@ from collections import defaultdict
 
 
 # --- CONFIG ---
-NWB_FILE = r"C:\NeuronalData\Raw\MrM_NP_2025-11-11_12-38-46\Record Node 107\experiment1.nwb"  # Set this to your NWB file
-SESSION_DIR = r"C:\NeuronalData\Raw\MrM_NP_2025-11-11_12-38-46"  # Set this to your Open Ephys session folder
+NWB_FILE = r"C:\NeuronalData\Raw\MrM_NP_2_2026-01-20_13-52-42\Record Node 107\experiment1.nwb"  # Set this to your NWB file
+SESSION_DIR = r"C:\NeuronalData\Raw\MrM_NP_2_2026-01-20_13-52-42"  # Set this to your Open Ephys session folder
 ANALOG_CHANNELS = [0, 1]  # Acquisition board channels to plot
 WINDOW_SEC = 5.0  # Default view window in seconds
 

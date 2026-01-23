@@ -5,22 +5,31 @@ from pyramid import cli
 import pandas as pd
 
 # Usage:
-# Run initial steps: python Kilo4_Neuropixel_Example.py initial
-# Then manually run Kilosort4 GUI to curate and save results: python -m kilosort
-# After running Kilosort4 GUI, run post-processing: python Kilo4_Neuropixel_Example.py postkilosort (overwrite timestamps after manual curation in phy)
-# Run conversion: python Kilo4_Neuropixel_Example.py convert
-# Having issues using multiprocessing/threading, especially during writing? 
+# This script can be customized however you like, but it is currently divided into 3 main steps that can be run separately.
+# In a terminal, activate the gold_pipelines environment and cd to directory containing this python script and run:
+# 1) Initial Kilosort4 processing: python Kilo4_Neuropixel_Binary_Example.py initial
+# 2) Post-Kilosort4 manual curation and timestamp overwriting: python Kilo4_Neuropixel_Binary_Example.py postkilosort
+# 3) Conversion to pyramid trial file (hdf5): python Kilo4_Neuropixel_Binary_Example.py convert
+# Having issues using multiprocessing/threading, especially while writing the binary file for kilosort? 
 # Try a different terminal like cmd, powershell, anaconda prompt, or git bash. I had luck with cmd prompt.
+# Notes on each step:
+# 1) Currently using kilosort4 programmatically through spikeinterface. Alternatively you can convert to binary and run the kilosort gui manually (recommended for first time users).
+# 2) # Phy GUI has some documented issues with Template and Feature views when installed in an environment with other stuff.
+    # Currently I am creating a new conda environment just for phy to get around this using
+    # the phy2_local.yml file in this repo. It seems to work fine if phy is installed in a clean environment:
+    # https://github.com/cortex-lab/phy/issues/1356
+    # Once you finish manual curation in phy, run this script with the postkilosort argument to overwrite timestamps. These timestamps will be more accurate
+    # than the original ones from kilosort since kilosort assumes samples are taken at a constant linear rate, which is not always true.
+# 3) Conversion step uses pyramid cli to convert the session to a pyramid trial file (hdf5). Make sure to set the correct paths below.
 
 # Paths and file names
 expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr"
-sessDir = "MrM_NP_2_2026-01-20_13-52-42"
+sessDir = "BinaryTest_2026-01-23_11-14-06"
 os.chdir(expDir)
 dataSearchPath = "C:/NeuronalData/Raw/"
 pyramidSearchPath = expDir+"/ecodes"
-convertSpecs = expDir+"/AODR_experiment_neuropixel.yaml"
+convertSpecs = expDir+"/AODR_experiment_neuropixel_binary.yaml"
 baseSaveDir = "C:/NeuronalData/Converted/"
-currentFile = "experiment1.nwb"
 trialFileOutputName = baseSaveDir+sessDir+".hdf5"
 sorted_out = 'C:/NeuronalData/Sorted/'+sessDir+"/"
 sys.path.append(expDir+"/python")
@@ -28,19 +37,19 @@ params_path = sorted_out+"kilosort4/sorter_output/params.py"
 
 
 def run_initial_pipeline():
+    # If you aren't sure about the stream_name, it will usually error out and print the available stream names in the error message. These change depending on equipment and save settings.
     sorter = OES(session_dir=dataSearchPath+sessDir+"/",
                  out_folder=sorted_out,
-                 stream_name = 'ProbeA-AP',
+                 stream_name = 'Record Node 107#Neuropix-PXI-122.ProbeA-AP',
                  sorter_name='kilosort4')
-    sorter.clean_tree()
-    sorter.read_data()
-    sorter.bandpass()
+    sorter.clean_tree() # Delete previous sorting results if they exist
+    sorter.read_data() # Reads data and sets the neuropixel probe (binary files come with probe attached already!)
+    sorter.bandpass() # Bandpass filter the data
     # Really 2 methods to run Kilosort4: either call the GUI manually, or run it programmatically below.
     # 1) Run Kilosort4 programmatically through spikeinterface:
     sorter.run_kilosort4()
-    # 2) Alternatively, you can run the Kilosort4 GUI manually by uncommenting the line below and commenting out the sorter.run_kilosort4() line:
-    #sorter.convert_to_binary()
-    # In a terminal to run the gui you need to run: python -m kilosort
+    # 2) Alternatively, you can run the Kilosort4 GUI manually by commenting out the sorter.run_kilosort4() line above
+    # Then, in a terminal to run the gui: python -m kilosort
     print("Kilosort4 sorting complete")
 
 
@@ -68,8 +77,7 @@ def run_conversion():
         "message_reader.session_dir="+dataSearchPath+sessDir,
         "gaze_x_reader.session_dir="+dataSearchPath+sessDir,
         "gaze_y_reader.session_dir="+dataSearchPath+sessDir,
-        "pupil_reader.session_dir="+dataSearchPath+sessDir,
-        "phy_reader.params_file="+params_path])
+        "pupil_reader.session_dir="+dataSearchPath+sessDir])
     print("Conversion complete.")
 
 if __name__ == "__main__":

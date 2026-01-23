@@ -83,6 +83,8 @@ class OpenEphysSessionSorter():
     
     def read_data(self):
         print("Reading data from Open Ephys session...")
+        sesssion = Session(self.session_dir)
+        record_node = sesssion.recordnodes[0]
         # Currently assumes Open Ephys GUI saved as nwb, limited to Intan headstages or Neuropixels connected to an NI Box
         self.logger = logging.getLogger(__name__)
         
@@ -94,23 +96,29 @@ class OpenEphysSessionSorter():
                 self.recording_file = self.session_dir
             data_source: str = 'acquisition/Acquisition Board-106.acquisition_board'
             self.recording = se.read_nwb_recording(file_path=self.recording_file, electrical_series_path=data_source)
-        elif self.stream_name == 'ProbeA-AP':
-            # Using Neuropixels probe with Open Ephys GUI saved as nwb
-            if not os.path.isfile(self.session_dir):
-                self.recording_file = self.session_dir + os.listdir(self.session_dir)[0] + "/experiment1.nwb"
-            else:
-                self.recording_file = self.session_dir
-            data_source: str = 'acquisition/Neuropix-PXI-122.ProbeA-AP' # If wrong, output error will list available series options
-            # YOU MUST TELL TELL THE BASE RECORDING OBJECT TO LOAD THE TIME VECTOR FROM THE NWB FILE!!! OR YOU WILL END UP WITH DESYNCED TIME VECTORS!
-            self.recording = se.read_nwb_recording(file_path=self.recording_file, electrical_series_path=data_source,load_time_vector=True)
-            probe_dir = Path(self.session_dir + os.listdir(self.session_dir)[0] + "/") # assuming your probe file is in this directory
-            self.np_probe = next(probe_dir.glob("*.json"), None)  # returns a Path or None
-            if self.np_probe is None:
-                raise FileNotFoundError(f"No Neuropixels probe .json file found in {probe_dir}")
-            else:
-                pgroup = read_probeinterface (self.np_probe)
-                self.recording.set_probegroup(pgroup, in_place=True)
-                print("Completed loading...")
+        elif 'ProbeA-AP' in self.stream_name:
+            if record_node.format == 'nwb':
+                # Using Neuropixels probe with Open Ephys GUI saved as nwb
+                if not os.path.isfile(self.session_dir):
+                    self.recording_file = self.session_dir + os.listdir(self.session_dir)[0] + "/experiment1.nwb"
+                else:
+                    self.recording_file = self.session_dir
+                data_source: str = 'acquisition/Neuropix-PXI-122.ProbeA-AP' # If wrong, output error will list available series options
+                # YOU MUST TELL TELL THE BASE RECORDING OBJECT TO LOAD THE TIME VECTOR FROM THE NWB FILE!!! OR YOU WILL END UP WITH DESYNCED TIME VECTORS!
+                self.recording = se.read_nwb_recording(file_path=self.recording_file, electrical_series_path=data_source,load_time_vector=True)
+            elif record_node.format == 'binary':
+                # Using Neuropixels probe with Open Ephys GUI saved as binary files
+                self.recording = se.read_openephys(folder_path=self.session_dir, stream_name=self.stream_name)  
+            
+            if not self.recording.has_probe():
+                probe_dir = Path(self.session_dir + os.listdir(self.session_dir)[0] + "/") # assuming your probe file is in this directory
+                self.np_probe = next(probe_dir.glob("*.json"), None)  # returns a Path or None
+                if self.np_probe is None:
+                    raise FileNotFoundError(f"No Neuropixels probe .json file found in {probe_dir}")
+                else:
+                    pgroup = read_probeinterface (self.np_probe)
+                    self.recording.set_probegroup(pgroup, in_place=True)
+                    print("Completed loading...")
     
     def set_tetrode(self):
         print("Setting tetrode probe...")

@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "subProcess": false,
-            "args": ["convert"]
+            "args": ["initial"]
         }
     ]
 }
