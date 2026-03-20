@@ -11,8 +11,10 @@ import pandas as pd
 # 1) Initial Kilosort4 processing: python Kilo4_Neuropixel_Binary_Example.py initial
 # 2) Post-Kilosort4 manual curation and timestamp overwriting: python Kilo4_Neuropixel_Binary_Example.py postkilosort
 # 3) Conversion to pyramid trial file (hdf5): python Kilo4_Neuropixel_Binary_Example.py convert
+
 # Having issues using multiprocessing/threading, especially while writing the binary file for kilosort? 
 # Try a different terminal like cmd, powershell, anaconda prompt, or git bash. I had luck with cmd prompt.
+
 # Notes on each step:
 # 1) Currently using kilosort4 programmatically through spikeinterface. Alternatively you can convert to binary and run the kilosort gui manually (recommended for first time users).
 # 2) # Phy GUI has some documented issues with Template and Feature views when installed in an environment with other stuff.
@@ -26,18 +28,18 @@ import pandas as pd
 # 3) Conversion step uses pyramid cli to convert the session to a pyramid trial file (hdf5). Make sure to set the correct paths below.
 
 # Paths and file names
-expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr"
-sessDir = "BinaryTest_2026-01-23_11-14-06"
-os.chdir(expDir)
-dataSearchPath = "C:/NeuronalData/Raw/"
-pyramidSearchPath = expDir+"/ecodes"
-convertSpecs = expDir+"/AODR_experiment_neuropixel_binary.yaml"
-baseSaveDir = "C:/NeuronalData/Converted/"
-trialFileOutputName = baseSaveDir+sessDir+".hdf5"
-sorted_out = 'C:/NeuronalData/Sorted/'+sessDir+"/"
-sys.path.append(expDir+"/python")
-params_path = sorted_out+"kilosort4/sorter_output/params.py"
-stream_name = 'Record Node 107#Neuropix-PXI-122.ProbeA-AP'
+expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr" # master experiment directory
+sessDir = "MrM_NP_2026-02-06_14-26-23" # session directory folder name
+os.chdir(expDir) # change working directory to experiment directory
+dataSearchPath = "C:/NeuronalData/Raw/" # base directory where session folders are located
+pyramidSearchPath = expDir+"/ecodes" # directory where pyramid ecode information is located
+convertSpecs = expDir+"/AODR_experiment_neuropixel_binary.yaml" # experiment specification yaml file for pyramid conversion
+baseSaveDir = "C:/NeuronalData/Converted/" # base directory to save converted pyramid trial files
+trialFileOutputName = baseSaveDir+sessDir+".hdf5" # full path and file name for converted pyramid trial file
+sorted_out = 'C:/NeuronalData/Sorted/'+sessDir+"/" # directory to save spike sorting output
+sys.path.append(expDir+"/python") # add experiment python directory to path to find custom sorters
+params_path = sorted_out+"kilosort4/sorter_output/params.py" # path to phy params.py file for pyramid conversion 
+stream_name = 'Record Node 107#Neuropix-PXI-122.ProbeA-AP' # stream name for neuropixel binary data in Open Ephys GUI
 
 def run_initial_pipeline():
     # If you aren't sure about the stream_name, it will usually error out and print the available stream names in the error message. These change depending on equipment and save settings.

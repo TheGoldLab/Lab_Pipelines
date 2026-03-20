@@ -30,6 +30,12 @@ import logging
 from open_ephys.analysis import Session
 from phy.apps.template import template_gui
 
+# Created by LWT 2025/2026
+# This is a custom spike sorter class for Open Ephys sessions using spikeinterface. It is kind of a mess and has a lot of different methods for various
+# recording formats and probe types. It has been iteratively updated depending on the data I have been working with. It was initially tested on previous
+# plexon linear array data, and then Open Ephys GUI nwb data from single electrodes and tetrodes, then neuropixel nwb data, then neuropixel binary data from Open Ephys GUI.
+# So not everything here may be necessary for your specific use case, but it should give you a good starting point, and there's no guarantee that everything will work correctly
+# since I have made some changes that I was not able to go back and test again on previous data formats.
 
 class OpenEphysSessionSorter():
     """Read continuous signal data from an Open Ephys session.
@@ -118,7 +124,8 @@ class OpenEphysSessionSorter():
                 else:
                     pgroup = read_probeinterface (self.np_probe)
                     self.recording.set_probegroup(pgroup, in_place=True)
-                    print("Completed loading...")
+        
+        print("Completed loading...")
     
     def set_tetrode(self):
         print("Setting tetrode probe...")
@@ -189,7 +196,7 @@ class OpenEphysSessionSorter():
         params = si.get_default_sorter_params('kilosort4')
         params['delete_recording_dat'] = False # Keep the .dat file for potential re-use and computing things. You do not need to convert to binary prior to running this way.
         params['n_jobs'] = -1 # Use all available CPU cores for writing the binary file.
-        params['pool_engine'] = "thread" # Using ProcessPoolExecutor (default) causes issues on windows if n_jobs=-1. Can set n_jobs to something like 8 and it will still work though.
+        params['pool_engine'] = "thread" # Using ProcessPoolExecutor (default) causes issues on windows if n_jobs=-1. Can set n_jobs to something like 8 and it will still work, just slow.
         job_kwargs = dict(n_jobs=-1, progress_bar=True)
         si.set_global_job_kwargs(**job_kwargs)
         self.sorting = si.run_sorter(sorter_name='kilosort4', recording=self.recording,
