@@ -14,7 +14,7 @@ import pandas as pd
 
 # Paths and file names
 expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr"
-sessDir = "MrM_NP_2_2026-01-20_13-52-42"
+sessDir = "BinaryTest_2026-01-29_11-27-53"
 os.chdir(expDir)
 dataSearchPath = "C:/NeuronalData/Raw/"
 pyramidSearchPath = expDir+"/ecodes"
