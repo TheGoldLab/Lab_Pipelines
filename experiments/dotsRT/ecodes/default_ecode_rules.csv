@@ -55,6 +55,13 @@ value,8057,prob_tp9,7000,6000,8000,0.001,
 value,8058,prob_tpa,7000,6000,8000,0.001,
 value,8072,hazard,7000,6000,8000,0.001,
 value,8078,noise,7000,6000,8000,0.1,
-value,8080,sample_x,7000,6000,8000,0.1,
-value,8081,sample_y,7000,6000,8000,0.1,
-value,8082,sample_lum,7000,6000,8000,0.1,
+value,8080,I_RUNLINE_X0,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8081,I_RUNLINE_Y0,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8082,I_RUNLINE_XMAX1,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8083,I_RUNLINE_XMAX2,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8084,I_RUNLINE_YMAX1,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8085,I_RUNLINE_YMAX2,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8086,I_RUNLINE_STEP_MEAN_CHOICE,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8087,I_RUNLINE_STEP_SD_CHOICE,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8088,I_RUNLINE_STEP_MEAN_ORTHO,7000,6000,8000,0.1,not sure about base/min/max/scale
+value,8089,I_RUNLINE_STEP_SD_ORTHO,7000,6000,8000,0.1,not sure about base/min/max/scale
