@@ -1,3 +1,5 @@
+# THE ORIGINAL, MAIN VERSION OF THIS FILE IS LOCATED IN THE AODR EXPERIMENT FOLDER. THIS IS A COPY FOR TESTING AND DEVELOPMENT PURPOSES.
+
 from __future__ import annotations
 from pathlib import Path
 import platform

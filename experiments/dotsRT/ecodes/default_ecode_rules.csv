@@ -32,8 +32,8 @@ id,8010,dot_dir,7000,6000,8000,0.1,not sure about base/min/max/scale
 id,8011,dot_coh,7000,6000,8000,0.1,not sure about base/min/max/scale
 value,8012,t2_x,7000,6000,8000,0.1,
 value,8013,t2_y,7000,6000,8000,0.1,
-value,8014,unkown_1,7000,6000,8000,0.1,
-value,8015,unkown_2,7000,6000,8000,0.1,
+value,8014,I_RUNLINE_SEED,7000,6000,8000,0.1,
+value,8015,I_RUNLINE_SCALE,7000,6000,8000,0.1,
 id,8017,trial_id,7000,6000,8000,1,
 value,8025,t1_lum,7000,6000,8000,0.1,
 value,8026,t2_lum,7000,6000,8000,0.1,
