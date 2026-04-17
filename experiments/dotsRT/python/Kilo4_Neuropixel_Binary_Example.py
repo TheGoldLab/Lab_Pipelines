@@ -26,20 +26,20 @@ import pandas as pd
 # 3) Conversion step uses pyramid cli to convert the session to a pyramid trial file (hdf5). Make sure to set the correct paths below.
 
 # Paths and file names
-expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr"
-sessDir = "BinaryTest_2026-01-23_11-14-06"
+expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/dotsRT" # This is the top level of your path in VS Code
+sessDir = "Ducky_2026-04-16_12-53-31" # This is the name of your session folder that contains the raw data. It should be in the dataSearchPath below.
 os.chdir(expDir)
-dataSearchPath = "C:/NeuronalData/Raw/"
+dataSearchPath = "C:/NeuronalData/Experiments/Dots/Ducky/Raw/" # The folder that contains your sessDir folder.
 pyramidSearchPath = expDir+"/ecodes"
-convertSpecs = expDir+"/AODR_experiment_neuropixel_binary.yaml"
-baseSaveDir = "C:/NeuronalData/Converted/"
-trialFileOutputName = baseSaveDir+sessDir+".hdf5"
-sorted_out = 'C:/NeuronalData/Sorted/'+sessDir+"/"
+convertSpecs = expDir+"/dotsRT_experiment_neuropixel_binary.yaml"
+baseSaveDir = "C:/NeuronalData/Experiments/Dots/Ducky/Raw/"+sessDir+"/Converted/" # Where you want the converted files to go.
+trialFileOutputName = baseSaveDir+sessDir+".hdf5" # The name of the converted file.
+sorted_out = "C:/NeuronalData/Experiments/Dots/Ducky/Sorted/"+sessDir+"/"
 sys.path.append(expDir+"/python")
 params_path = sorted_out+"kilosort4/sorter_output/params.py"
-stream_name = 'Record Node 107#Neuropix-PXI-122.ProbeA-AP'
+stream_name = 'Record Node 102#OneBox-109.ProbeA-AP'
 
-def run_initial_pipeline():
+def run_initial_pipeline(): 
     # If you aren't sure about the stream_name, it will usually error out and print the available stream names in the error message. These change depending on equipment and save settings.
     sorter = OES(session_dir=dataSearchPath+sessDir+"/",
                  out_folder=sorted_out,

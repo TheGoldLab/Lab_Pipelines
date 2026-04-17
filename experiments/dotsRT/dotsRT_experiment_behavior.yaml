@@ -113,13 +113,6 @@ readers:
           - class: pyramid.neutral_zone.transformers.standard_transformers.OffsetThenGain
             args:
               gain: 10.2
-  pupil_reader:
-    class: pyramid.neutral_zone.readers.open_ephys_session.OpenEphysSessionTimeSeriesReader
-    args:
-      session_dir: "Overwrites_in_your_CLI"
-      result_name: pupil
-      stream_name: acquisition_board
-      channel_names: ["ADC3"]
 trials:
   # Start trials when TTL line 1 goes high.
   start_buffer: ttl_1
@@ -150,13 +143,6 @@ trials:
       args:
         buffer_name: gaze_y
         channel_id: ADC2
-        filter_type: golay
-        window_size: 3001  
-        poly_order: 2  # Filter order
-    - class: pyramid.trials.standard_adjusters.SignalSmoother
-      args:
-        buffer_name: pupil
-        channel_id: ADC3
         filter_type: golay
         window_size: 3001  
         poly_order: 2  # Filter order
