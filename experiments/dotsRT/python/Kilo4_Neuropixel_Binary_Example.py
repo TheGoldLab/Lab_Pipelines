@@ -26,13 +26,13 @@ import pandas as pd
 # 3) Conversion step uses pyramid cli to convert the session to a pyramid trial file (hdf5). Make sure to set the correct paths below.
 
 # Paths and file names
-expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/dotsRT" # This is the top level of your path in VS Code
 sessDir = "Ducky_2026-04-16_12-53-31" # This is the name of your session folder that contains the raw data. It should be in the dataSearchPath below.
+expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/dotsRT" # This is the top level of your path in VS Code
 os.chdir(expDir)
 dataSearchPath = "C:/NeuronalData/Experiments/Dots/Ducky/Raw/" # The folder that contains your sessDir folder.
 pyramidSearchPath = expDir+"/ecodes"
 convertSpecs = expDir+"/dotsRT_experiment_neuropixel_binary.yaml"
-baseSaveDir = "C:/NeuronalData/Experiments/Dots/Ducky/Raw/"+sessDir+"/Converted/" # Where you want the converted files to go.
+baseSaveDir = "C:/NeuronalData/Experiments/Dots/Ducky/Converted/" # Where you want the converted files to go.
 trialFileOutputName = baseSaveDir+sessDir+".hdf5" # The name of the converted file.
 sorted_out = "C:/NeuronalData/Experiments/Dots/Ducky/Sorted/"+sessDir+"/"
 sys.path.append(expDir+"/python")
@@ -80,13 +80,12 @@ def run_conversion():
         "message_reader.session_dir="+dataSearchPath+sessDir,
         "gaze_x_reader.session_dir="+dataSearchPath+sessDir,
         "gaze_y_reader.session_dir="+dataSearchPath+sessDir,
-        "pupil_reader.session_dir="+dataSearchPath+sessDir,
         "phy_reader.params_file="+params_path])
     print("Conversion complete.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python Kilo4_Neuropixel_Example.py [initial|postkilosort|convert], running all steps...")
+        print("Usage: python Kilo4_Neuropixel_Binary_Example.py [initial|postkilosort|convert], running all steps...")
         run_initial_pipeline()
         run_postkilosort()
         run_conversion()
