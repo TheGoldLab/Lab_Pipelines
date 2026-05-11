@@ -9,12 +9,12 @@ import sys, os
 
 # Paths and file names
 expDir = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/dotsRT" # This is the top level of your path in VS Code
-sessDir = "LongRigTest_2026-03-18_14-39-36" # This is the name of your session folder that contains the raw data. It should be in the dataSearchPath below.
+sessDir = "Ducky_2026-04-16_12-53-31" # This is the name of your session folder that contains the raw data. It should be in the dataSearchPath below.
 os.chdir(expDir)
-dataSearchPath = "/Volumes/Extreme SSD/" # The folder that contains your sessDir folder.
+dataSearchPath = "C:/NeuronalData/Experiments/Dots/Ducky/Raw/" # The folder that contains your sessDir folder.
 pyramidSearchPath = expDir+"/ecodes"
 convertSpecs = expDir+"/dotsRT_experiment_behavior.yaml"
-baseSaveDir = "/Volumes/Extreme SSD/Tests/Converted/" # Where you want the converted files to go.
+baseSaveDir = "C:/NeuronalData/Experiments/Dots/Ducky/Raw/"+sessDir+"/Converted/" # Where you want the converted files to go.
 trialFileOutputName = baseSaveDir+sessDir+".hdf5" # The name of the converted file.
 sys.path.append(expDir+"/python") # Sometimes necessary...
 
