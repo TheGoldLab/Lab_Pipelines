@@ -9,7 +9,7 @@ if nargin < 2 || isempty(filename)
 end
 
 if nargin < 3 || isempty(spikeCategories)
-    spikeCategories = {'spikes'};
+    spikeCategories = {'spikes', 'phy_clusters'};
 end
 
 % Get numTrials -- remember first and last are dummies
@@ -237,15 +237,22 @@ if ~isempty(dataInTrialFileFormat(2).signals)
     signalNames = fieldnames(dataInTrialFileFormat(2).signals);
     signalNames = intersect(signalNames, {'gaze_x', 'gaze_y', 'pupil'});
     numSignals = length(signalNames);
-    if any(dataInTrialFileFormat(2).signals.(signalNames{1}).type == 'SignalTimeChunk')
-        dataInFIRAFormat.analog.data = struct( ...
-            'length', [], ...
-            'values', []);
+    if isfield(dataInTrialFileFormat(2).signals.(signalNames{1}),'type')
+        if any(dataInTrialFileFormat(2).signals.(signalNames{1}).type == 'SignalTimeChunk')
+            dataInFIRAFormat.analog.data = struct( ...
+                'length', [], ...
+                'values', []);
+        else
+            dataInFIRAFormat.analog.data = struct( ...
+                'start_time', cell(numTrials, numSignals), ...
+                'length', [], ...
+                'values', []);
+        end
     else
         dataInFIRAFormat.analog.data = struct( ...
-            'start_time', cell(numTrials, numSignals), ...
-            'length', [], ...
-            'values', []);
+                'start_time', cell(numTrials, numSignals), ...
+                'length', [], ...
+                'values', []);
     end
 
     % Loop through each signal type
@@ -261,9 +268,11 @@ if ~isempty(dataInTrialFileFormat(2).signals)
 
         % Add data
         for tt = 1:numTrials
-            if ~any(dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).type == 'SignalTimeChunk')
-                dataInFIRAFormat.analog.data(tt,ss).start_time = ...
-                    dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).first_sample_time;
+            if ~isfield(dataInTrialFileFormat(2).signals.(signalNames{ss}),'type')
+                % if ~any(dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).type == 'SignalTimeChunk')
+                    dataInFIRAFormat.analog.data(tt,ss).start_time = ...
+                        dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).first_sample_time;
+                % end
             end
             dataInFIRAFormat.analog.data(tt,ss).values = ...
                 dataInTrialFileFormat(tt+1).signals.(signalNames{ss}).signal_data;
@@ -282,6 +291,10 @@ dataInFIRAFormat.spikes.data = {};
 % Keep track of channel,unit pairs to see if we have already added them
 channelUnits = [NaN;NaN];
 
+% Placeholder for Phy units when per-cluster channel is not yet known.
+% Overwritten later in this section when we look for metadata.
+phyChannelPlaceholder = -1; 
+
 % Loops through the trials and collect the data
 for tt = 1:numTrials
 
@@ -293,17 +306,17 @@ for tt = 1:numTrials
     end
 
     % But only the numeric event lists that are in spike categories.
-    spikeNames = {};
-    categories = dataInTrialFileFormat(tt+1).categories;
-    if ~isempty(categories)
-        for sc = 1:length(spikeCategories)
-            spikeCategory = spikeCategories{sc};
-            if isfield(categories, spikeCategory)
-                spikeNames = cat(1, spikeNames, categories.(spikeCategory));
-            end
-        end
-    end
-    spikeChannelNames = intersect(numericNames, spikeNames);
+    % spikeNames = {};
+    % categories = dataInTrialFileFormat(tt+1).categories;
+    % if ~isempty(categories)
+    %     for sc = 1:length(spikeCategories)
+    %         spikeCategory = spikeCategories{sc};
+    %         if isfield(categories, spikeCategory)
+    %             spikeNames = cat(1, spikeNames, categories.(spikeCategory));
+    %         end
+    %     end
+    % end
+    spikeChannelNames = intersect(numericNames, spikeCategories);
 
     % Loop through the channels to count units
     numSpikeChannels = length(spikeChannelNames);
@@ -311,7 +324,7 @@ for tt = 1:numTrials
 
         % Parse channel number
         if strcmp(spikeChannelNames{ss},'phy_clusters')
-            channelNumber = 0;
+            channelNumber = phyChannelPlaceholder;
         else
             channelNumber = str2double(spikeChannelNames{ss}(end-2:end));
         end
@@ -337,11 +350,11 @@ for tt = 1:numTrials
 
                     % Add to lists of channels/units/ids
                     if strcmp(spikeChannelNames{ss},'phy_clusters')
-                        dataInFIRAFormat.spikes.channel = cat(2, dataInFIRAFormat.spikes.channel, 0); % No channel numbers
+                        dataInFIRAFormat.spikes.channel = cat(2, dataInFIRAFormat.spikes.channel, phyChannelPlaceholder); % Placeholder until metadata backfill
                         dataInFIRAFormat.spikes.unit = cat(2, dataInFIRAFormat.spikes.unit, units(uu)); % 
                         dataInFIRAFormat.spikes.id = cat(2, dataInFIRAFormat.spikes.id, units(uu));
                         % Add to list
-                        channelUnits = cat(2, channelUnits, [0; units(uu)]);
+                        channelUnits = cat(2, channelUnits, [phyChannelPlaceholder; units(uu)]);
                     else
                         dataInFIRAFormat.spikes.channel = cat(2, dataInFIRAFormat.spikes.channel, channelNumber);
                         dataInFIRAFormat.spikes.unit = cat(2, dataInFIRAFormat.spikes.unit, units(uu));
@@ -367,6 +380,155 @@ for tt = 1:numTrials
 
     % Update the row counter
     channelRowStart = size(dataInFIRAFormat.spikes.data, 2);
+end
+
+%% Add per-unit phy cluster metadata to spikes.
+%
+% Look for trial enhancement "phy_cluster_info" (stored as a struct keyed
+% by cluster id) and map metadata into parallel spikes fields, one value per
+% unit in dataInFIRAFormat.spikes.
+phyClusterInfo = [];
+for tt = 1:numTrials
+    enhancements = dataInTrialFileFormat(tt+1).enhancements;
+    if ~isempty(enhancements) && isfield(enhancements, 'phy_cluster_info')
+        phyClusterInfo = enhancements.phy_cluster_info;
+        break
+    end
+end
+
+if ~isempty(phyClusterInfo) && isstruct(phyClusterInfo) && ~isempty(dataInFIRAFormat.spikes.id)
+    clusterInfoFieldNames = fieldnames(phyClusterInfo);
+    clusterIds = [];
+    clusterMeta = {};
+    metadataFieldNames = {};
+
+    % Build lookup lists from cluster id -> metadata struct.
+    for ff = 1:length(clusterInfoFieldNames)
+        fieldName = clusterInfoFieldNames{ff};
+        xPrefixedMatch = regexp(fieldName, '^x(\d+)$', 'tokens', 'once');
+        numericMatch = regexp(fieldName, '^(\d+)$', 'tokens', 'once');
+        if ~isempty(xPrefixedMatch)
+            clusterId = str2double(xPrefixedMatch{1});
+        elseif ~isempty(numericMatch)
+            clusterId = str2double(numericMatch{1});
+        else
+            continue
+        end
+
+        if isnan(clusterId)
+            continue
+        end
+
+        clusterValue = phyClusterInfo.(fieldName);
+        if ~isstruct(clusterValue)
+            continue
+        end
+
+        clusterIds(end+1) = clusterId; %#ok<AGROW>
+        clusterMeta{end+1} = clusterValue; %#ok<AGROW>
+        metadataFieldNames = union(metadataFieldNames, fieldnames(clusterValue));
+    end
+
+    % Initialize one metadata field per Phy column, parallel to spikes.id.
+    numSpikeUnits = length(dataInFIRAFormat.spikes.id);
+    for mm = 1:length(metadataFieldNames)
+        metadataName = metadataFieldNames{mm};
+        safeMetadataName = matlab.lang.makeValidName(metadataName);
+        targetFieldName = ['phy_' safeMetadataName];
+        dataInFIRAFormat.spikes.(targetFieldName) = cell(1, numSpikeUnits);
+    end
+
+    % Fill metadata values for Phy-derived units (placeholder channel).
+    for uu = 1:numSpikeUnits
+        if dataInFIRAFormat.spikes.channel(uu) ~= phyChannelPlaceholder
+            continue
+        end
+
+        thisClusterId = dataInFIRAFormat.spikes.id(uu);
+        clusterIndex = find(clusterIds == thisClusterId, 1);
+        if isempty(clusterIndex)
+            continue
+        end
+
+        thisMeta = clusterMeta{clusterIndex};
+
+        % If cluster metadata has channel info, backfill it.
+        if isfield(thisMeta, 'channel') && isnumeric(thisMeta.channel)
+            dataInFIRAFormat.spikes.channel(uu) = thisMeta.channel;
+        elseif isfield(thisMeta, 'ch') && isnumeric(thisMeta.ch)
+            dataInFIRAFormat.spikes.channel(uu) = thisMeta.ch;
+        end
+
+        for mm = 1:length(metadataFieldNames)
+            metadataName = metadataFieldNames{mm};
+            safeMetadataName = matlab.lang.makeValidName(metadataName);
+            targetFieldName = ['phy_' safeMetadataName];
+
+            if isfield(thisMeta, metadataName)
+                dataInFIRAFormat.spikes.(targetFieldName){uu} = thisMeta.(metadataName);
+            end
+        end
+    end
+
+    dataInFIRAFormat.spikes.phy_metadata_fields = strcat('phy_', matlab.lang.makeValidName(metadataFieldNames));
+end
+
+%% Build unit-level spikes table.
+%
+% Make a table with one row per unit and core ids plus optional phy metadata.
+numSpikeUnits = length(dataInFIRAFormat.spikes.id);
+if numSpikeUnits > 0
+    spikesTable = table( ...
+        dataInFIRAFormat.spikes.id(:), ...
+        dataInFIRAFormat.spikes.channel(:), ...
+        dataInFIRAFormat.spikes.unit(:), ...
+        'VariableNames', {'id', 'channel', 'unit'});
+
+    nSpikes = zeros(numSpikeUnits, 1);
+    for uu = 1:numSpikeUnits
+        spikeTimesByTrial = dataInFIRAFormat.spikes.data(:, uu);
+        nSpikes(uu) = sum(cellfun(@numel, spikeTimesByTrial));
+    end
+    spikesTable.nSpikes = nSpikes;
+
+    if isfield(dataInFIRAFormat.spikes, 'phy_metadata_fields')
+        phyMetadataFields = dataInFIRAFormat.spikes.phy_metadata_fields;
+        for ff = 1:length(phyMetadataFields)
+            fieldName = phyMetadataFields{ff};
+            if ~isfield(dataInFIRAFormat.spikes, fieldName)
+                continue
+            end
+
+            fieldValue = dataInFIRAFormat.spikes.(fieldName);
+            if iscell(fieldValue)
+                spikesTable.(fieldName) = fieldValue(:);
+            elseif isnumeric(fieldValue) || islogical(fieldValue)
+                spikesTable.(fieldName) = num2cell(fieldValue(:));
+            elseif isstring(fieldValue)
+                spikesTable.(fieldName) = cellstr(fieldValue(:));
+            else
+                spikesTable.(fieldName) = num2cell(fieldValue(:));
+            end
+        end
+    end
+
+    dataInFIRAFormat.spikes.phy_info = spikesTable;
+else
+    dataInFIRAFormat.spikes.phy_info = table([], [], [], [], 'VariableNames', {'id', 'channel', 'unit', 'nSpikes'});
+end
+
+% Keep spikes metadata only in spikes.phy_info; remove transient phy_* fields.
+if isfield(dataInFIRAFormat.spikes, 'phy_metadata_fields')
+    fieldsToRemove = dataInFIRAFormat.spikes.phy_metadata_fields;
+    if isstring(fieldsToRemove)
+        fieldsToRemove = cellstr(fieldsToRemove);
+    end
+    for ff = 1:length(fieldsToRemove)
+        if isfield(dataInFIRAFormat.spikes, fieldsToRemove{ff})
+            dataInFIRAFormat.spikes = rmfield(dataInFIRAFormat.spikes, fieldsToRemove{ff});
+        end
+    end
+    dataInFIRAFormat.spikes = rmfield(dataInFIRAFormat.spikes, 'phy_metadata_fields');
 end
 
 %% Add dio or ttl data

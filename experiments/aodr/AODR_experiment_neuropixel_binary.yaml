@@ -198,3 +198,7 @@ trials:
       package_path: .
       args:
         min_angular_distance_to_target_deg: 25
+    - class: pyramid.trials.standard_enhancers.PhyClusterInfoEnhancer
+      args:
+        cluster_buffer_name: phy_clusters
+        enhancement_name: phy_cluster_info

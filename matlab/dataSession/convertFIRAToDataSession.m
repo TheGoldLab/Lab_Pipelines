@@ -71,20 +71,55 @@ end
 dataInSessionDataFormat.spikes = [];
 if ~isempty(options.spikeIDs) && isfield(dataInFIRAFormat, 'spikes')
 
+    numSpikeUnits = numel(dataInFIRAFormat.spikes.id);
+
     % check spikeIDs
     if ischar(options.spikeIDs) && strcmp(options.spikeIDs, 'all')
-        options.spikeIDs = dataInFIRAFormat.spikes.id;
-        Lspikes = true(size(options.spikeIDs));
+        Lspikes = true(size(dataInFIRAFormat.spikes.id));
     else % if isnumeric(spikeIDs)
         Lspikes = ismember(dataInFIRAFormat.spikes.id, options.spikeIDs);
     end
 
     if any(Lspikes)
+        selectedSpikeIDs = dataInFIRAFormat.spikes.id(Lspikes);
         dataInSessionDataFormat.spikes.data = cell2table(...
             dataInFIRAFormat.spikes.data(options.trialSelectionArray, Lspikes), ...
-            'VariableNames', cellstr(num2str(options.spikeIDs'))');
-        dataInSessionDataFormat.spikes.id = options.spikeIDs;
+            'VariableNames', cellstr(num2str(selectedSpikeIDs'))');
+        dataInSessionDataFormat.spikes.id = selectedSpikeIDs;
         dataInSessionDataFormat.spikes.channel = dataInFIRAFormat.spikes.channel(Lspikes);
+
+        % Preserve additional unit-level spike metadata, including phy_* fields.
+        spikeFieldNames = fieldnames(dataInFIRAFormat.spikes);
+        ignoredFields = {'data', 'id', 'channel'};
+        metadataFieldNames = setdiff(spikeFieldNames, ignoredFields);
+        for ff = 1:length(metadataFieldNames)
+            fieldName = metadataFieldNames{ff};
+            fieldValue = dataInFIRAFormat.spikes.(fieldName);
+
+            if istable(fieldValue)
+                if height(fieldValue) == numSpikeUnits
+                    dataInSessionDataFormat.spikes.(fieldName) = fieldValue(Lspikes, :);
+                else
+                    dataInSessionDataFormat.spikes.(fieldName) = fieldValue;
+                end
+            elseif iscell(fieldValue)
+                if isvector(fieldValue) && numel(fieldValue) == numSpikeUnits
+                    dataInSessionDataFormat.spikes.(fieldName) = fieldValue(Lspikes);
+                else
+                    dataInSessionDataFormat.spikes.(fieldName) = fieldValue;
+                end
+            elseif isnumeric(fieldValue) || islogical(fieldValue) || isstring(fieldValue) || iscategorical(fieldValue)
+                if isvector(fieldValue) && numel(fieldValue) == numSpikeUnits
+                    dataInSessionDataFormat.spikes.(fieldName) = fieldValue(Lspikes);
+                elseif size(fieldValue, 1) == numSpikeUnits
+                    dataInSessionDataFormat.spikes.(fieldName) = fieldValue(Lspikes, :);
+                else
+                    dataInSessionDataFormat.spikes.(fieldName) = fieldValue;
+                end
+            else
+                dataInSessionDataFormat.spikes.(fieldName) = fieldValue;
+            end
+        end
     end
 end
 

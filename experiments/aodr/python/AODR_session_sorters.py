@@ -4,9 +4,9 @@ import platform
 import shutil
 import json
 import spikeinterface.full as si
-import kilosort
-from kilosort import io, run_kilosort
-from kilosort.gui.launch import launcher as launch_gui
+# import kilosort
+# from kilosort import io, run_kilosort
+# from kilosort.gui.launch import launcher as launch_gui
 import spikeinterface_gui
 import spikeinterface.extractors as se
 import spikeinterface.preprocessing as spre
@@ -22,13 +22,12 @@ import spikeinterface.widgets as sw
 from spikeinterface.extractors import read_phy, read_binary
 from probeinterface import generate_tetrode, ProbeGroup, Probe, generate_linear_probe
 from probeinterface import write_probeinterface, read_probeinterface
-from probeinterface.plotting import plot_probe, plot_probe_group
 import subprocess, random, string, os
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
 from open_ephys.analysis import Session
-from phy.apps.template import template_gui
+# from phy.apps.template import template_gui
 
 # Created by LWT 2025/2026
 # This is a custom spike sorter class for Open Ephys sessions using spikeinterface. It is kind of a mess and has a lot of different methods for various

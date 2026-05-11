@@ -1,5 +1,5 @@
 import sys, os
-import phy
+# import phy
 import spikeinterface.widgets as sw
 from AODR_session_sorters import OpenEphysSessionSorter as OES
 from pyramid import cli
@@ -28,15 +28,15 @@ import pandas as pd
 # 3) Conversion step uses pyramid cli to convert the session to a pyramid trial file (hdf5). Make sure to set the correct paths below.
 
 # Paths and file names
-expDir = "C:/Users/lt711/Documents/GitHub/Lab_Pipelines/experiments/aodr" # master experiment directory
-sessDir = "MrM_NP_2026-02-06_14-26-23" # session directory folder name
+expDir = "/Users/lowell/Documents/GitHub/Lab_Pipelines/experiments/aodr" # master experiment directory
+sessDir = "MrM_NP_2026-02-02_12-36-41" # session directory folder name
 os.chdir(expDir) # change working directory to experiment directory
-dataSearchPath = "C:/NeuronalData/Raw/" # base directory where session folders are located
+dataSearchPath = "/Volumes/Extreme SSD/Neuropixel/MrM/Raw/" # base directory where session folders are located
 pyramidSearchPath = expDir+"/ecodes" # directory where pyramid ecode information is located
 convertSpecs = expDir+"/AODR_experiment_neuropixel_binary.yaml" # experiment specification yaml file for pyramid conversion
-baseSaveDir = "C:/NeuronalData/Converted/" # base directory to save converted pyramid trial files
+baseSaveDir = "/Volumes/Extreme SSD/Neuropixel/MrM/Converted/" # base directory to save converted pyramid trial files
 trialFileOutputName = baseSaveDir+sessDir+".hdf5" # full path and file name for converted pyramid trial file
-sorted_out = 'C:/NeuronalData/Sorted/'+sessDir+"/" # directory to save spike sorting output
+sorted_out = '/Volumes/Extreme SSD/Neuropixel/MrM/Sorted/'+sessDir+"/" # directory to save spike sorting output
 sys.path.append(expDir+"/python") # add experiment python directory to path to find custom sorters
 params_path = sorted_out+"kilosort4/sorter_output/params.py" # path to phy params.py file for pyramid conversion 
 stream_name = 'Record Node 107#Neuropix-PXI-122.ProbeA-AP' # stream name for neuropixel binary data in Open Ephys GUI
